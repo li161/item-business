@@ -1,5 +1,41 @@
-import { useMemo, useState, type CSSProperties } from 'react'
+import { Suspense, useMemo, useState, type CSSProperties } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { useGLTF } from '@react-three/drei'
 import { ArrowRight, Check, ChevronLeft, ChevronRight, Copy, Ruler, Sun, X } from 'lucide-react'
+import { useRef } from 'react'
+import type { Group } from 'three'
+
+const CHARACTER_MODEL = 'https://files.innerscene.com/library/priya-3d-person-woman-athletic-walking-bf61042b/482365d4ced7c61f5686/priya-3d-person-woman-athletic-walking.glb'
+
+function CurtainMuse({ onAwaken }: { onAwaken: () => void }) {
+  const { scene } = useGLTF(CHARACTER_MODEL)
+  const group = useRef<Group>(null)
+  const [turned, setTurned] = useState(false)
+  useFrame((_, delta) => {
+    if (!group.current) return
+    const target = turned ? -0.28 : 0
+    group.current.rotation.y += (target - group.current.rotation.y) * Math.min(1, delta * 3)
+    group.current.position.y = Math.sin(performance.now() * 0.0008) * 0.018
+  })
+  return <group ref={group} position={[0, -1.05, 0]} scale={1.08} onClick={() => { setTurned(v => !v); onAwaken() }}>
+    <primitive object={scene} />
+  </group>
+}
+
+function CharacterStage() {
+  const [awake, setAwake] = useState(false)
+  return <div className="character-stage" aria-label="可交互的3D人物展示">
+    <Canvas camera={{ position: [0, 0.55, 3.4], fov: 34 }} dpr={[1, 1.6]} gl={{ alpha: true, antialias: true }}>
+      <ambientLight intensity={1.15} />
+      <directionalLight position={[2.5, 4, 3]} intensity={2.2} castShadow />
+      <directionalLight position={[-2, 2, -2]} intensity={1.1} color="#f0d7b0" />
+      <Suspense fallback={null}><CurtainMuse onAwaken={() => setAwake(v => !v)} /></Suspense>
+    </Canvas>
+    <div className="character-caption"><span>THE LIGHT SEEKER</span><b>{awake ? '她正在感受窗边的光' : '与光一起生活'}</b><small>点击人物 · 互动一下</small></div>
+    <span className="character-orbit" aria-hidden="true" />
+  </div>
+}
+useGLTF.preload(CHARACTER_MODEL)
 
 const scenes = [
   { id:'sunlit', title:'光落在亚麻之间', en:'THE SOFT DAYLIGHT', description:'自然光透过轻柔织物，留下层次丰富的明暗与温度。', credit:'Kevin Lieder / Unsplash', href:'https://unsplash.com/photos/cozy-living-room-with-sunlight-streaming-through-sheer-curtains-5T_XETRABHs', image:'https://images.unsplash.com/photo-1783110688413-77aadea9e511?auto=format&fit=crop&w=2600&q=90', position:'center 53%', tag:'客厅 · 自然光' },
@@ -27,6 +63,7 @@ export default function App(){
   <div className="room-visual">
    {scenes.map((item,index)=><img key={item.id} className={index===activeScene?'room-image is-active':'room-image'} src={item.image} alt={item.title+'真实室内摄影'} style={{objectPosition:item.position}} loading={index===0?'eager':'lazy'}/>)}
    <div className="room-shade"/>
+   <CharacterStage />
    <header className="topbar">
     <a className="wordmark" href="#" aria-label="Curtain Lab 首页"><span className="wordmark-icon">C</span><span><b>CURTAIN LAB</b><small>WINDOW ATELIER · EST. 2026</small></span></a>
     <nav className="top-nav"><a href="#experience">灵感空间</a><a href="#materials">面料图鉴</a><a href="#process">定制流程</a></nav>
