@@ -267,6 +267,67 @@ function CurtainPanel({ side }: { side: 'left' | 'right' }) {
   )
 }
 
+
+function makeHill(points: Array<[number, number]>, color: string) {
+  const shape = new THREE.Shape()
+  shape.moveTo(points[0][0], points[0][1])
+  for (let i = 1; i < points.length; i++) shape.lineTo(points[i][0], points[i][1])
+  shape.lineTo(points[points.length - 1][0], -1)
+  shape.lineTo(points[0][0], -1)
+  shape.closePath()
+  return <mesh position={[0, 0, 0]}><shapeGeometry args={[shape]} /><meshBasicMaterial color={color} /></mesh>
+}
+
+function FloatingCloud({ position, scale, speed }: { position: [number, number, number]; scale: number; speed: number }) {
+  const cloud = useRef<THREE.Group>(null)
+  useFrame(({ clock }, delta) => {
+    if (!cloud.current) return
+    cloud.current.position.x += delta * speed
+    if (cloud.current.position.x > 3.4) cloud.current.position.x = -3.4
+    cloud.current.position.y = position[1] + Math.sin(clock.elapsedTime * 0.35 + position[0]) * 0.035
+  })
+  return <group ref={cloud} position={position} scale={scale}>
+    <mesh position={[-0.22, 0, 0]}><sphereGeometry args={[0.23, 14, 10]} /><meshBasicMaterial color="#fff5dc" /></mesh>
+    <mesh position={[0.02, 0.08, 0]}><sphereGeometry args={[0.3, 14, 10]} /><meshBasicMaterial color="#fff9e9" /></mesh>
+    <mesh position={[0.28, -0.015, 0]}><sphereGeometry args={[0.2, 14, 10]} /><meshBasicMaterial color="#fff2d7" /></mesh>
+  </group>
+}
+
+function OutdoorGarden() {
+  const sun = useRef<THREE.Mesh>(null)
+  const birds = useRef<THREE.Group>(null)
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime
+    if (sun.current) sun.current.rotation.z = Math.sin(t * 0.15) * 0.04
+    if (birds.current) {
+      birds.current.position.x = Math.sin(t * 0.22) * 0.42
+      birds.current.position.y = 3.12 + Math.sin(t * 1.8) * 0.07
+    }
+  })
+  return <group position={[0, 0, -2.385]}>
+    <mesh ref={sun} position={[1.72, 3.55, 0.015]}><circleGeometry args={[0.34, 32]} /><meshBasicMaterial color="#f8d58a" /></mesh>
+    <FloatingCloud position={[-1.7, 3.75, 0.02]} scale={1.05} speed={0.035} />
+    <FloatingCloud position={[0.25, 4.02, 0.025]} scale={0.72} speed={0.025} />
+    {makeHill([[-2.65, 1.12], [-2.1, 1.65], [-1.45, 1.8], [-0.7, 1.52], [0.05, 1.73], [0.82, 1.38], [1.55, 1.6], [2.65, 1.15]], '#8ea77a')}
+    {makeHill([[-2.65, 0.76], [-1.8, 1.15], [-1.05, 1.02], [-0.2, 1.28], [0.7, 0.92], [1.5, 1.18], [2.65, 0.82]], '#668c68')}
+    {makeHill([[-2.65, 0.35], [-1.9, 0.65], [-1.1, 0.52], [-0.25, 0.72], [0.65, 0.48], [1.55, 0.68], [2.65, 0.4]], '#a6b77e')}
+    {[-2.25, -1.95, 1.98, 2.28].map((x, i) => <group key={x} position={[x, 0.85 + (i % 2) * 0.18, -0.02]}>
+      <mesh position={[0, 0.42, 0]}><cylinderGeometry args={[0.055, 0.075, 0.86, 7]} /><meshBasicMaterial color="#80664b" /></mesh>
+      <mesh position={[0, 1.03, 0]} scale={[1.05, 1.12, 0.5]}><sphereGeometry args={[0.48, 14, 10]} /><meshBasicMaterial color={i % 2 ? '#52785a' : '#6f9365'} /></mesh>
+      <mesh position={[-0.18, 1.23, 0.012]} scale={[0.55, 0.72, 0.5]}><sphereGeometry args={[0.36, 12, 9]} /><meshBasicMaterial color="#86a16e" /></mesh>
+    </group>)}
+    <group ref={birds} position={[0, 3.12, 0.04]}>
+      {[0, 1, 2].map((n) => <group key={n} position={[n * 0.16, n * 0.1, 0]}>
+        <mesh rotation={[0, 0, 0.38]} position={[-0.055, 0, 0]}><planeGeometry args={[0.13, 0.035]} /><meshBasicMaterial color="#526b59" side={THREE.DoubleSide} /></mesh>
+        <mesh rotation={[0, 0, -0.38]} position={[0.055, 0, 0]}><planeGeometry args={[0.13, 0.035]} /><meshBasicMaterial color="#526b59" side={THREE.DoubleSide} /></mesh>
+      </group>)}
+    </group>
+    {Array.from({ length: 18 }, (_, i) => <mesh key={i} position={[-2.25 + (i % 9) * 0.55, 0.55 + Math.sin(i * 1.7) * 0.13, 0.045]}>
+      <circleGeometry args={[0.025 + (i % 3) * 0.008, 8]} /><meshBasicMaterial color={i % 3 === 0 ? '#f5e8bb' : i % 3 === 1 ? '#e9c3a9' : '#f6f0d8'} />
+    </mesh>)}
+  </group>
+}
+
 function WindowWall() {
   const hour = useStudio((s) => s.hour)
   const night = hour >= 19 || hour < 7
@@ -286,6 +347,7 @@ function WindowWall() {
         <boxGeometry args={[5.13, 4.28, 0.018]} />
         <meshBasicMaterial color={sky} />
       </mesh>
+      <OutdoorGarden />
       <mesh position={[0, 2.42, -2.41]}>
         <boxGeometry args={[0.055, 4.3, 0.08]} />
         <meshStandardMaterial color="#f5f1e8" roughness={0.28} />
