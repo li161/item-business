@@ -1,162 +1,83 @@
 import { Suspense, useMemo, useState } from 'react'
 import { Loader } from '@react-three/drei'
-import { ArrowDownRight, ArrowUpRight, Check, Minus, Plus, ShoppingBag, Sun, Wind, X } from 'lucide-react'
+import { ArrowUpRight, Minus, Plus, ShoppingBag, Sun, Wind, X, Sparkles, Leaf } from 'lucide-react'
 import CurtainScene from './scene/CurtainScene'
 import { useStudio, type FabricId } from './store'
 
-const fabrics: Array<{ id: FabricId; name: string; zh: string; price: number; color: string; light: string }> = [
-  { id: 'sheer', name: 'SHEER', zh: '云雾轻纱', price: 268, color: 'rgba(235,231,220,.86)', light: '#e9e5dc' },
-  { id: 'linen', name: 'LINEN', zh: '天然亚麻', price: 368, color: '#c8bba4', light: '#b9ad98' },
-  { id: 'velvet', name: 'VELVET', zh: '柔雾天鹅绒', price: 528, color: '#62594e', light: '#62594e' },
-  { id: 'blackout', name: 'BLACKOUT', zh: '全遮光织物', price: 428, color: '#858176', light: '#858176' },
+const fabrics: Array<{ id: FabricId; name: string; zh: string; price: number; color: string; note: string }> = [
+  { id: 'sheer', name: 'MIST VEIL', zh: '云朵薄纱', price: 268, color: '#eee9dc', note: '让晨光轻轻穿过' },
+  { id: 'linen', name: 'FOREST LINEN', zh: '森林亚麻', price: 368, color: '#c7b99d', note: '自然、温柔、有呼吸感' },
+  { id: 'velvet', name: 'DUSK VELVET', zh: '暮色绒布', price: 528, color: '#766b59', note: '把黄昏留在房间里' },
+  { id: 'blackout', name: 'MOON SHADOW', zh: '月影遮光', price: 428, color: '#85877a', note: '为夜晚留一份安静' },
 ]
-const windLabels = ['静风', '微风', '清风', '强风']
-const formatPrice = (value: number) => new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 0 }).format(value)
+const winds = ['无风', '微风', '清风', '大风']
+const money = (n: number) => new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 0 }).format(n)
 
 export default function App() {
-  const fabric = useStudio((s) => s.fabric)
-  const wind = useStudio((s) => s.wind)
-  const hour = useStudio((s) => s.hour)
-  const opening = useStudio((s) => s.opening)
-  const width = useStudio((s) => s.width)
-  const height = useStudio((s) => s.height)
-  const quantity = useStudio((s) => s.quantity)
-  const bag = useStudio((s) => s.bag)
-  const setFabric = useStudio((s) => s.setFabric)
-  const setWind = useStudio((s) => s.setWind)
-  const setHour = useStudio((s) => s.setHour)
-  const setOpening = useStudio((s) => s.setOpening)
-  const setWidth = useStudio((s) => s.setWidth)
-  const setHeight = useStudio((s) => s.setHeight)
-  const setQuantity = useStudio((s) => s.setQuantity)
-  const addToBag = useStudio((s) => s.addToBag)
-  const removeFromBag = useStudio((s) => s.removeFromBag)
+  const fabric = useStudio(s => s.fabric), wind = useStudio(s => s.wind), hour = useStudio(s => s.hour)
+  const opening = useStudio(s => s.opening), width = useStudio(s => s.width), height = useStudio(s => s.height)
+  const quantity = useStudio(s => s.quantity), bag = useStudio(s => s.bag)
+  const setFabric = useStudio(s => s.setFabric), setWind = useStudio(s => s.setWind), setHour = useStudio(s => s.setHour)
+  const setOpening = useStudio(s => s.setOpening), setWidth = useStudio(s => s.setWidth), setHeight = useStudio(s => s.setHeight)
+  const setQuantity = useStudio(s => s.setQuantity), addToBag = useStudio(s => s.addToBag), removeFromBag = useStudio(s => s.removeFromBag)
   const [panel, setPanel] = useState<'materials' | 'custom' | null>(null)
   const [bagOpen, setBagOpen] = useState(false)
-  const active = fabrics.find((item) => item.id === fabric)!
+  const active = fabrics.find(f => f.id === fabric)!
   const area = width * height / 10000
   const total = useMemo(() => area * active.price * quantity, [area, active.price, quantity])
   const bagTotal = bag.reduce((sum, item) => sum + item.price, 0)
-  const timeName = hour < 10 ? '清晨' : hour < 15 ? '日光' : hour < 19 ? '黄昏' : '夜晚'
+  const period = hour < 10 ? '清晨' : hour < 15 ? '午后' : hour < 19 ? '黄昏' : '星夜'
 
-  return (
-    <main className="studio">
-      <div className="scene-layer">
-        <Suspense fallback={<div className="scene-loading">正在构建空间光场…</div>}>
-          <CurtainScene />
-        </Suspense>
+  return <main className="storybook">
+    <div className="scene-layer"><Suspense fallback={<div className="scene-loading">小小的世界正在醒来…</div>}><CurtainScene /></Suspense></div>
+    <div className="paint-wash" />
+    <header className="story-header">
+      <a className="story-brand" href="#" aria-label="风之窗首页"><span className="brand-mark">✳</span><span>WIND GARDEN<small>THE LITTLE WORLD BEHIND YOUR WINDOW</small></span></a>
+      <nav><button onClick={() => setPanel(panel === 'materials' ? null : 'materials')}>织物图鉴</button><button onClick={() => setPanel(panel === 'custom' ? null : 'custom')}>为你定制</button></nav>
+      <button className="bag-button" onClick={() => setBagOpen(true)} aria-label="打开收藏篮"><ShoppingBag size={17}/><span>{bag.length}</span></button>
+    </header>
+
+    <section className="story-copy">
+      <div className="chapter"><span>✦</span> 森林里的第一缕风 · CHAPTER 01</div>
+      <h1>让风，住进<br/><em>你的窗户。</em></h1>
+      <p>推开窗，森林就醒了。<br/>选一片喜欢的云，让阳光替你挑选窗帘。</p>
+      <button className="discover" onClick={() => setPanel('materials')}>去森林里挑一匹布 <ArrowUpRight size={16}/></button>
+      <div className="story-caption"><span>01 / 04</span><i/> A WINDOW TO A SMALLER WORLD</div>
+    </section>
+
+    <div className="sprite-note"><span className="sparkle">✧</span><div><b>嘘……听见风了吗？</b><small>按住窗帘，和风一起玩耍</small></div></div>
+
+    <section className="storybook-dock">
+      <div className="dock-material">
+        <div className="dock-label"><Leaf size={13}/> 今日的布料 <small>FABRIC</small></div>
+        <div className="fabric-pills">{fabrics.map((f,i)=><button key={f.id} onClick={()=>setFabric(f.id)} className={fabric===f.id?'fabric-pill active':'fabric-pill'} title={f.zh}><i style={{background:f.color}}/><span>{['薄纱','亚麻','绒布','遮光'][i]}</span></button>)}</div>
       </div>
-      <div className="atmosphere" />
-      <header className="header">
-        <a className="brand" href="#" aria-label="CURTAIN LAB 首页">
-          <span>CURTAIN</span><i>LAB</i><small>FABRIC IN MOTION</small>
-        </a>
-        <nav className="navigation">
-          <button className={panel === 'materials' ? 'nav-active' : ''} onClick={() => setPanel(panel === 'materials' ? null : 'materials')}>COLLECTION <sup>01</sup></button>
-          <button className={panel === 'custom' ? 'nav-active' : ''} onClick={() => setPanel(panel === 'custom' ? null : 'custom')}>MADE TO MEASURE <sup>02</sup></button>
-        </nav>
-        <button className="bag-trigger" onClick={() => setBagOpen(true)} aria-label="打开购物袋">
-          <ShoppingBag size={17} /><span>{String(bag.length).padStart(2, '0')}</span>
-        </button>
-      </header>
+      <div className="dock-divider"/>
+      <div className="dock-control wind-dock"><div className="dock-label"><Wind size={13}/> 风的方向 <small>WIND</small></div><div className="wind-pills">{winds.map((w,i)=><button key={w} onClick={()=>setWind(i as 0|1|2|3)} className={wind===i?'active':''}>{w}</button>)}</div></div>
+      <div className="dock-divider"/>
+      <div className="dock-control time-dock"><div className="dock-label"><Sun size={13}/> 一天的颜色 <small>TIME</small></div><div className="time-line"><input aria-label="调节时间" type="range" min="8" max="22" step=".5" value={hour} onChange={e=>setHour(Number(e.target.value))}/><b>{String(Math.floor(hour)).padStart(2,'0')}:{hour%1?'30':'00'}</b><small>{period}</small></div></div>
+      <div className="dock-divider"/>
+      <div className="dock-control opening-dock"><div className="dock-label">窗帘开合 <small>OPEN</small></div><div className="time-line"><input aria-label="调节窗帘开合" type="range" min="0" max="1" step=".01" value={opening} onChange={e=>setOpening(Number(e.target.value))}/><b>{Math.round(opening*100)}%</b></div></div>
+      <button className="custom-round" onClick={()=>setPanel('custom')} aria-label="定制窗帘"><Sparkles size={18}/><span>定制</span></button>
+    </section>
 
-      <section className="intro">
-        <div className="eyebrow"><span /> A STUDY OF LIGHT & TEXTURE</div>
-        <h1>Light, shaped<br /><em>by fabric.</em></h1>
-        <p>让光，穿过织物，成为空间的一部分。<br />抓住窗帘，亲手感受每一寸布料的回应。</p>
-        <div className="intro-foot"><b>01</b><span /> INTERACTIVE CURTAIN STUDIO</div>
-      </section>
+    <aside className={panel?'storybook-panel open':'storybook-panel'} aria-hidden={!panel}>
+      <button className="close-panel" onClick={()=>setPanel(null)} aria-label="关闭"><X size={18}/></button>
+      {panel==='materials'?<><div className="panel-kicker">A LITTLE FABRIC ATLAS</div><h2>森林的<br/><em>四种颜色。</em></h2><p className="panel-intro">每一匹布，都藏着一种天气。选中它，看看光会变成什么模样。</p>
+        <div className="storybook-fabrics">{fabrics.map((f,i)=><button key={f.id} className={fabric===f.id?'storybook-fabric chosen':'storybook-fabric'} onClick={()=>setFabric(f.id)}><span className="fabric-number">0{i+1}</span><i style={{background:f.color}}/><span className="fabric-desc"><b>{f.zh}</b><small>{f.note}</small></span><strong>¥{f.price}<small>/㎡</small></strong></button>)}</div>
+        <div className="fairy-tip">✧ 小提示：抓住窗帘试试，薄纱会比绒布更容易随风起舞。</div><button className="wood-button" onClick={()=>setPanel('custom')}>量一量我的窗户 <ArrowUpRight size={16}/></button>
+      </>:<><div className="panel-kicker">MADE FOR YOUR LITTLE HOME</div><h2>量一量，<br/><em>刚刚好。</em></h2><p className="panel-intro">告诉我们窗户的尺寸，为你的房间织一片合适的风景。</p>
+        <label className="measure-field"><span>窗户宽度 <small>WIDTH</small></span><div><input type="number" min="60" max="800" value={width} onChange={e=>setWidth(Number(e.target.value))}/><b>厘米</b></div></label>
+        <label className="measure-field"><span>窗户高度 <small>HEIGHT</small></span><div><input type="number" min="80" max="500" value={height} onChange={e=>setHeight(Number(e.target.value))}/><b>厘米</b></div></label>
+        <div className="estimate"><span>布料面积 <b>{area.toFixed(2)} ㎡</b></span><span>当前布料 <b>{active.zh}</b></span></div>
+        <div className="quantity"><span>想做几套？</span><div><button onClick={()=>setQuantity(quantity-1)}><Minus size={13}/></button><b>{quantity}</b><button onClick={()=>setQuantity(quantity+1)}><Plus size={13}/></button></div></div>
+        <div className="total"><span>预计价格</span><b>¥{money(total)}</b></div><button className="wood-button" onClick={()=>{addToBag(total);setBagOpen(true)}}>放进我的收藏篮 <ShoppingBag size={16}/></button><p className="fine-print">* 此处为面料估算价，实际价格以测量和工艺确认为准。</p>
+      </>}
+    </aside>
 
-      <div className="gesture-hint"><span className="gesture-icon">↔</span><div><b>触摸并拖动窗帘</b><small>GRAB THE FABRIC · MOVE IT FREELY</small></div></div>
+    <footer className="story-footer"><span>TAKE A BREATH · FOLLOW THE WIND</span><span>一扇窗，就是一个小小的世界。</span></footer>
 
-      <section className="control-bar">
-        <div className="control-block material-control">
-          <div className="control-heading">MATERIAL <span>材质探索</span></div>
-          <div className="material-swatches">
-            {fabrics.map((item, index) => (
-              <button key={item.id} className={fabric === item.id ? 'swatch active' : 'swatch'} onClick={() => setFabric(item.id)} aria-label={item.zh} title={item.zh}>
-                <span style={{ background: item.color }} /><small>0{index + 1}</small>
-              </button>
-            ))}
-          </div>
-          <div className="material-current"><b>{active.name}</b><span>{active.zh}</span></div>
-        </div>
-        <div className="control-rule" />
-        <div className="control-block wind-control">
-          <div className="control-heading"><Wind size={13} /> WIND <span>风感</span></div>
-          <div className="wind-choices">{windLabels.map((label, index) => <button key={label} className={wind === index ? 'selected' : ''} onClick={() => setWind(index as 0 | 1 | 2 | 3)}>{label}</button>)}</div>
-          <div className="wind-lines">{Array.from({ length: 12 }, (_, index) => <i key={index} className={index < wind * 3 ? 'lit' : ''} />)}</div>
-        </div>
-        <div className="control-rule" />
-        <div className="control-block daylight-control">
-          <div className="control-heading"><Sun size={13} /> DAYLIGHT <span>昼夜</span></div>
-          <div className="range-line"><span>08</span><input type="range" min="8" max="22" step=".5" value={hour} onChange={(event) => setHour(Number(event.target.value))} aria-label="调节昼夜时间" /><span>22</span></div>
-          <div className="range-value"><b>{String(Math.floor(hour)).padStart(2, '0')}:{hour % 1 ? '30' : '00'}</b><span>{timeName}</span></div>
-        </div>
-        <div className="control-rule" />
-        <div className="control-block opening-control">
-          <div className="control-heading">OPENING <span>窗帘开合</span></div>
-          <div className="range-line"><span>闭</span><input type="range" min="0" max="1" step=".01" value={opening} onChange={(event) => setOpening(Number(event.target.value))} aria-label="调节窗帘开合程度" /><span>开</span></div>
-          <div className="range-value"><b>{Math.round(opening * 100)}%</b><span>双侧同步</span></div>
-        </div>
-      </section>
-
-      <aside className={panel ? 'side-panel shown' : 'side-panel'} aria-hidden={!panel}>
-        <button className="panel-x" onClick={() => setPanel(null)} aria-label="关闭面板"><X size={17} /></button>
-        {panel === 'materials' ? (
-          <>
-            <div className="panel-eyebrow">01 / THE MATERIAL LIBRARY</div>
-            <h2>Find your<br /><em>texture.</em></h2>
-            <p className="panel-desc">织物不只是颜色。重量、纤维与透光，共同决定它如何回应光线。</p>
-            <div className="fabric-list">
-              {fabrics.map((item, index) => (
-                <button key={item.id} className={fabric === item.id ? 'fabric-option chosen' : 'fabric-option'} onClick={() => setFabric(item.id)}>
-                  <span className="fabric-number">0{index + 1}</span><span className="fabric-sample" style={{ background: item.color }} />
-                  <span className="fabric-name"><b>{item.name}</b><small>{item.zh}</small></span>
-                  <span className="fabric-price">¥{item.price}<small>/㎡</small></span>{fabric === item.id && <Check size={14} />}
-                </button>
-              ))}
-            </div>
-            <div className="panel-footnote">✳ 选择材质后，场景中的布料质感与运动参数会同步更新。</div>
-            <button className="dark-action" onClick={() => setPanel('custom')}>开始尺寸定制 <ArrowUpRight size={16} /></button>
-          </>
-        ) : (
-          <>
-            <div className="panel-eyebrow">02 / MADE FOR YOUR SPACE</div>
-            <h2>Made to<br /><em>measure.</em></h2>
-            <p className="panel-desc">输入窗户尺寸，生成你的专属窗帘方案。</p>
-            <label className="dimension-field"><span>WIDTH <small>宽度</small></span><div><input type="number" min="60" max="800" value={width} onChange={(event) => setWidth(Number(event.target.value))} /><b>CM</b></div></label>
-            <label className="dimension-field"><span>HEIGHT <small>高度</small></span><div><input type="number" min="80" max="500" value={height} onChange={(event) => setHeight(Number(event.target.value))} /><b>CM</b></div></label>
-            <div className="estimate-row"><div><span>ESTIMATED AREA</span><b>{area.toFixed(2)} <small>㎡</small></b></div><div><span>FABRIC</span><b>{active.name}</b></div></div>
-            <div className="quantity-row"><span>数量 / 套</span><div><button onClick={() => setQuantity(quantity - 1)}><Minus size={13} /></button><b>{quantity}</b><button onClick={() => setQuantity(quantity + 1)}><Plus size={13} /></button></div></div>
-            <div className="price-total"><span>ESTIMATED TOTAL</span><b>¥{formatPrice(total)}</b></div>
-            <button className="dark-action" onClick={() => { addToBag(total); setBagOpen(true) }}>加入购物袋 <ArrowUpRight size={16} /></button>
-            <p className="disclaimer">* 当前为面料估算价，最终价格以现场测量和工艺确认为准。</p>
-          </>
-        )}
-      </aside>
-
-      <footer className="footer">
-        <span>DESIGNED AROUND YOU</span><span>LESS INTERFACE. MORE EXPERIENCE.</span>
-        <button onClick={() => setPanel('custom')}>CONFIGURE YOUR CURTAIN <ArrowDownRight size={14} /></button>
-      </footer>
-
-      {bagOpen && (
-        <div className="drawer-scrim" onClick={() => setBagOpen(false)}>
-          <section className="bag-drawer" onClick={(event) => event.stopPropagation()}>
-            <div className="drawer-heading"><div><span>YOUR SELECTION</span><h2>Shopping bag <i>({bag.length})</i></h2></div><button onClick={() => setBagOpen(false)}><X size={19} /></button></div>
-            {bag.length ? <>
-              <div className="bag-lines">{bag.map((item) => {
-                const product = fabrics.find((f) => f.id === item.fabric)!
-                return <div className="bag-line" key={item.id}><span className="bag-swatch" style={{ background: product.color }} /><div><b>{product.name}</b><small>{item.width} × {item.height} cm · {item.quantity} 套</small><button onClick={() => removeFromBag(item.id)}>移除</button></div><strong>¥{formatPrice(item.price)}</strong></div>
-              })}</div>
-              <div className="drawer-total"><span>ESTIMATED TOTAL</span><b>¥{formatPrice(bagTotal)}</b></div>
-              <p className="disclaimer">购物袋仅保存当前浏览器会话中的定制方案，暂不包含在线支付。</p>
-            </> : <div className="empty-bag"><ShoppingBag size={27} /><p>你的购物袋还是空的</p><button onClick={() => { setBagOpen(false); setPanel('custom') }}>开始定制 <ArrowUpRight size={15} /></button></div>}
-          </section>
-        </div>
-      )}
-      <Loader />
-    </main>
-  )
+    {bagOpen&&<div className="bag-scrim" onClick={()=>setBagOpen(false)}><section className="bag-panel" onClick={e=>e.stopPropagation()}><div className="bag-title"><div><small>YOUR LITTLE COLLECTION</small><h2>我的收藏篮 <i>({bag.length})</i></h2></div><button onClick={()=>setBagOpen(false)}><X/></button></div>{bag.length?<><div className="bag-items">{bag.map(item=>{const f=fabrics.find(x=>x.id===item.fabric)!;return <div className="bag-item" key={item.id}><i style={{background:f.color}}/><div><b>{f.zh}</b><small>{item.width} × {item.height} cm · {item.quantity} 套</small><button onClick={()=>removeFromBag(item.id)}>从篮子里拿出</button></div><strong>¥{money(item.price)}</strong></div>})}</div><div className="bag-total"><span>合计</span><b>¥{money(bagTotal)}</b></div><p className="fine-print">收藏篮暂存于当前页面，尚未接入在线支付。</p></>:<div className="empty-bag"><span>✧</span><p>篮子里还没有喜欢的布料。</p><button onClick={()=>{setBagOpen(false);setPanel('materials')}}>去森林里看看</button></div>}</section></div>}
+    <Loader/>
+  </main>
 }
