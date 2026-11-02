@@ -7,10 +7,10 @@ const scenes = [
   { id:'shadow', title:'光影有了形状', en:'LIGHT BECOMES TEXTURE', description:'让窗边的光线与织物纹理，成为房间最自然的装饰。', credit:'Sara / Unsplash', href:'https://unsplash.com/photos/light-streams-through-sheer-curtains-in-a-room-cc_l1L3bsbU', image:'https://images.unsplash.com/photo-1746273246916-9dc919dd136d?auto=format&fit=crop&w=2600&q=90', position:'center 50%', tag:'卧室 · 透光' },
 ]
 const fabrics = [
-  {id:'linen',name:'天然亚麻',en:'NATURAL LINEN',color:'#c7b99f',texture:'linen',price:268,note:'天然肌理 · 柔和垂坠 · 半透光',level:'轻柔自然'},
-  {id:'cotton',name:'棉麻混纺',en:'COTTON BLEND',color:'#b6aa9b',texture:'cotton',price:198,note:'细腻亲肤 · 日常耐用 · 柔光',level:'日常百搭'},
-  {id:'velvet',name:'绒面遮光',en:'VELVET BLACKOUT',color:'#77756d',texture:'velvet',price:328,note:'厚实垂感 · 强遮光 · 静谧感',level:'沉稳私密'},
-  {id:'sheer',name:'柔光纱帘',en:'LIGHT SHEER',color:'#e6e1d6',texture:'sheer',price:128,note:'高透光 · 轻盈飘逸 · 柔化直射光',level:'通透轻盈'},
+  {id:'linen',name:'天然亚麻',en:'NATURAL LINEN',color:'#c7b99f',texture:'linen',price:268,note:'天然肌理 · 透气亲肤 · 自然垂坠',level:'轻柔自然',light:'中等透光',weight:'中等克重',image:'https://images.pexels.com/photos/15679399/pexels-photo-15679399/free-photo-of-beige-wrinkled-fabric.jpeg?auto=compress&cs=tinysrgb&w=1000',credit:'Lisett Kruusimäe / Pexels',href:'https://www.pexels.com/photo/beige-wrinkled-fabric-15679399/'},
+  {id:'cotton',name:'棉麻混纺',en:'COTTON BLEND',color:'#b6aa9b',texture:'cotton',price:198,note:'细腻亲肤 · 日常耐用 · 柔和滤光',level:'日常百搭',light:'柔和滤光',weight:'轻中克重',image:'https://images.pexels.com/photos/5908313/pexels-photo-5908313.jpeg?auto=compress&cs=tinysrgb&w=1000',credit:'Mike Murray / Pexels',href:'https://www.pexels.com/photo/crumpled-white-textile-5908313/'},
+  {id:'velvet',name:'绒面遮光',en:'VELVET BLACKOUT',color:'#77756d',texture:'velvet',price:328,note:'短绒细腻 · 厚实垂感 · 适合卧室',level:'沉稳私密',light:'低透光*',weight:'偏重克重',image:'https://images.pexels.com/photos/1487821/pexels-photo-1487821.jpeg?auto=compress&cs=tinysrgb&w=1000',credit:'Engin Akyurt / Pexels',href:'https://www.pexels.com/photo/close-up-photo-of-black-textile-1487821/'},
+  {id:'sheer',name:'柔光纱帘',en:'LIGHT SHEER',color:'#e6e1d6',texture:'sheer',price:128,note:'轻盈通透 · 过滤直射光 · 保留自然亮度',level:'通透轻盈',light:'高透光',weight:'轻薄克重',image:'https://images.pexels.com/photos/16260995/pexels-photo-16260995.jpeg?auto=compress&cs=tinysrgb&w=1000',credit:'Esma S / Pexels',href:'https://www.pexels.com/photo/curtains-casting-shadows-on-a-wall-16260995/'},
 ]
 type Layer='sheer'|'double'|'blackout'
 export default function App(){
@@ -42,8 +42,14 @@ export default function App(){
    <div className="panel-tabs"><button className={tab==='fabric'?'selected':''} onClick={()=>setTab('fabric')}>01 面料与搭配</button><button className={tab==='measure'?'selected':''} onClick={()=>setTab('measure')}>02 窗户尺寸</button></div>
    {tab==='fabric'?<div className="panel-content" id="materials">
     <div className="field-heading"><span>选择面料</span><small>FABRIC SELECTION</small></div>
-    <div className="fabric-list">{fabrics.map(item=><button key={item.id} onClick={()=>setFabric(item.id)} className={fabric===item.id?'fabric-option chosen':'fabric-option'}><span className={'fabric-swatch '+item.texture} style={{'--swatch':item.color} as CSSProperties}>{fabric===item.id&&<Check size={14}/>}</span><span className="fabric-copy"><b>{item.name}</b><small>{item.en}</small></span><span className="fabric-price">¥{item.price}<small>/㎡</small></span></button>)}</div>
+    <div className="fabric-list">{fabrics.map(item=><button key={item.id} onClick={()=>setFabric(item.id)} className={fabric===item.id?'fabric-option chosen':'fabric-option'}><span className={'fabric-swatch '+item.texture} style={{'--swatch':item.color} as CSSProperties}><img src={item.image} alt={item.name+'真实面料纹理'} loading="lazy"/>{fabric===item.id&&<i><Check size={14}/></i>}</span><span className="fabric-copy"><b>{item.name}</b><small>{item.en}</small></span><span className="fabric-price">¥{item.price}<small>/㎡</small></span></button>)}</div>
     <div className="fabric-note"><span className="note-chip">SELECTED</span><div><b>{selected.level}</b><p>{selected.note}</p></div></div>
+    <div className="material-detail" key={selected.id}>
+     <div className="material-photo"><img src={selected.image} alt={selected.name+'面料实拍细节'}/><span>FABRIC MACRO / REAL PHOTO</span></div>
+     <div className="material-meta"><div><span>透光表现</span><b>{selected.light}</b></div><div><span>织物厚度</span><b>{selected.weight}</b></div></div>
+     <a className="material-credit" href={selected.href} target="_blank" rel="noreferrer">图片来源：{selected.credit} <ArrowRight size={11}/></a>
+     {selected.id==='velvet'&&<p className="material-disclaimer">*遮光效果取决于背衬、面料结构与安装缝隙；此处为材质类别说明，不代表实测遮光率。</p>}
+    </div>
     <div className="field-heading layer-heading"><span>窗帘组合</span><small>CURTAIN LAYERS</small></div>
     <div className="layer-options">
      <button className={layer==='sheer'?'layer-option chosen':'layer-option'} onClick={()=>setLayer('sheer')}><span className="layer-icon sheer-icon"/><b>单层纱帘</b><small>保留自然采光</small></button>
