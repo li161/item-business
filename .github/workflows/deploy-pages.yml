@@ -32,7 +32,7 @@ jobs:
           end = html.index('</script>', start)
           Path('/tmp/curtain-lab-check.js').write_text(html[start:end])
           PY
-          node -e 'const fs=require("fs");const s=fs.readFileSync("/tmp/curtain-lab-check.js","utf8").replace(/^\\s*import\\s+\\*\\s+as\\s+THREE\\s+from\\s+["\\x27][^"\\x27]+["\\x27];\\s*/,"");new Function(s);console.log("Three.js module syntax: OK")'
+          node -e 'const fs=require("fs");const s=fs.readFileSync("/tmp/curtain-lab-check.js","utf8").split("\\n").filter(x=>!x.trim().startsWith("import ")).join("\\n");new Function(s);console.log("Three.js module syntax: OK")'
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload site
