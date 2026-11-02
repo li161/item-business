@@ -442,7 +442,7 @@ function ForestSpirit() {
       {[-1, 0, 1].map((line) => <mesh key={line} position={[side * 0.16, line * 0.065, 0]} rotation={[0, 0, side * -0.16]}>
         <cylinderGeometry args={[0.006, 0.006, 0.23, 5]} /><meshStandardMaterial color="#6d746b" />
       </mesh>)}
-    </group>)
+    </group>)}
     {[-0.14, 0, 0.14].map((x, i) => <mesh key={x} position={[x, 0.52 + (i === 1 ? 0.07 : 0), 0.57]} rotation={[0, 0, Math.PI]}><coneGeometry args={[0.045, 0.11, 3]} /><meshStandardMaterial color="#858b82" /></mesh>)}
     <mesh position={[-0.48, 0.43, 0.08]}><sphereGeometry args={[0.17, 14, 10]} /><meshStandardMaterial color="#858b82" /></mesh>
     <mesh position={[0.48, 0.43, 0.08]}><sphereGeometry args={[0.17, 14, 10]} /><meshStandardMaterial color="#858b82" /></mesh>
