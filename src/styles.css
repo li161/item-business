@@ -20,3 +20,19 @@
 .material-credit:hover{color:#46483d}
 .material-disclaimer{margin:7px 0 0;color:#9a8e7b;font-size:7px;line-height:1.7}
 @media(max-width:760px){.material-photo{height:150px}}
+
+/* Immersive 3D character — a living presence in the room */
+.character-stage{position:absolute;z-index:1;right:2.2%;top:13%;width:min(43%,520px);height:76%;min-height:440px;pointer-events:auto;isolation:isolate}
+.character-stage canvas{width:100%!important;height:100%!important;cursor:grab;outline:none}
+.character-stage canvas:active{cursor:grabbing}
+.character-caption{position:absolute;right:4%;bottom:8%;display:flex;flex-direction:column;align-items:flex-end;gap:5px;color:#fff;text-align:right;text-shadow:0 2px 15px #0008;pointer-events:none}
+.character-caption span{font:7px 'DM Sans',sans-serif;letter-spacing:.23em;color:#ead8b8}
+.character-caption b{font-size:13px;font-weight:400;letter-spacing:.1em}
+.character-caption small{font:7px 'DM Sans',sans-serif;letter-spacing:.12em;color:#ffffffb8}
+.character-orbit{position:absolute;right:12%;bottom:12%;width:190px;height:34px;border:1px solid #fff5;border-radius:50%;transform:rotate(-9deg);pointer-events:none}
+.room-shade{z-index:0}
+.hero-message{z-index:1}
+.topbar{z-index:3}
+.scene-controls,.photo-credit{z-index:2}
+@media(max-width:1050px){.character-stage{right:0;width:44%;height:67%;top:18%}}
+@media(max-width:760px){.character-stage{right:-4%;top:22%;width:58%;height:58%;min-height:330px;opacity:.92}.character-caption{right:10%;bottom:7%}.character-caption b{font-size:10px}.character-caption small{font-size:6px}.character-orbit{width:120px;height:24px;right:14%}.hero-message{z-index:2;width:76%}}
