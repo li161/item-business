@@ -1,28 +1,45 @@
-# 幕间 MÙJIAN｜窗帘美学展厅
+# CURTAIN LAB — Fabric in Motion
 
-一个轻量的窗帘品牌展示网站，纯 HTML/CSS/JavaScript，无需安装依赖或构建。
+An immersive 3D curtain studio. Not a conventional product grid: visitors can interact with fabric, explore material behavior, tune daylight and configure a made-to-measure curtain.
 
-## 页面体验
+## Product experience
 
-- **窗帘款式展厅**：5 款窗帘，中心款放大，两侧款式带透视、景深与旋转过渡。
-- **多种切换方式**：左右箭头、点击两侧款式、底部圆点、触屏滑动、键盘左右方向键。
-- **空间应用效果**：客厅、卧室、落地窗、书房四种环境；切换环境时保留当前窗帘款式。
-- **预约咨询**：填写称呼与联系方式后复制咨询文本；不会自动上传个人信息。
-- **响应式布局**：适配桌面与手机。
+- **Interactive room** — a full-screen architectural interior with a large window and two independently rendered curtain panels.
+- **Fabric interaction** — pointer/touch drag deforms the curtain mesh in 3D space. The response is continuous and damped rather than a CSS panel translation.
+- **Material library** — Sheer, Linen, Velvet and Blackout profiles with different color, opacity, roughness, sheen and fold response.
+- **Wind studio** — still air, light breeze, breeze and strong wind.
+- **Daylight studio** — time-of-day control from 08:00 to 22:00, changing scene lighting.
+- **Made to measure** — width, height, quantity and estimated area-based pricing.
+- **Shopping bag** — add the current configuration and review the selection.
 
-## 本地预览
+## Stack
 
-直接打开 `index.html`，或运行：
+- React + TypeScript + Vite
+- Three.js via React Three Fiber
+- Drei for scene helpers
+- Zustand for shared studio state
+- GSAP dependency available for future transition choreography
+
+## Development
 
 ```bash
-python3 -m http.server 8080
+npm install
+npm run dev
 ```
 
-访问 `http://localhost:8080`。
+Production build:
 
-## GitHub Pages
+```bash
+npm run build
+npm run preview
+```
 
-仓库已加入 GitHub Actions 自动部署工作流：`.github/workflows/deploy-pages.yml`。
-首次启用时，在仓库 **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。之后推送到 `main` 会自动部署。
+## Deployment
 
-图片来自 Unsplash，字体来自 Google Fonts；需要联网加载远程资源。
+GitHub Actions builds the Vite app and deploys the generated `dist/` directory to GitHub Pages.
+
+## Current implementation notes
+
+The curtain is a subdivided Three.js mesh whose vertices are updated continuously for fabric folds, wind response and local pointer interaction. This is an interactive real-time deformation model, not a full cloth solver: self-collision, collision against the window frame, physically based fabric testing and calibrated 60fps profiling remain future engineering work.
+
+The shopping bag and price are a front-end prototype; there is no checkout, inventory or order backend.
