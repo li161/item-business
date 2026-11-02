@@ -428,7 +428,7 @@ function ForestSpirit() {
     event.stopPropagation()
     jumpVelocity.current = 2.5
   }
-  return <group ref={spirit} position={[2.52, 0.38, -1.12]} scale={0.78} onClick={hop}>
+  return <group ref={spirit} position={[2.52, 0.38, -1.12]} scale={0.78} onClick={hop} onPointerOver={() => { document.body.style.cursor = "pointer" }} onPointerOut={() => { document.body.style.cursor = "" }}>
     <mesh position={[0, 0.68, 0]} castShadow><sphereGeometry args={[0.58, 24, 18]} /><meshStandardMaterial color="#8d9289" roughness={0.96} /></mesh>
     <mesh position={[-0.34, 1.22, 0.015]} rotation={[0, 0, 0.16]}><coneGeometry args={[0.14, 0.48, 9]} /><meshStandardMaterial color="#858b82" roughness={0.95} /></mesh>
     <mesh position={[0.34, 1.22, 0.015]} rotation={[0, 0, -0.16]}><coneGeometry args={[0.14, 0.48, 9]} /><meshStandardMaterial color="#858b82" roughness={0.95} /></mesh>
@@ -438,6 +438,11 @@ function ForestSpirit() {
       <mesh position={[0, 0, 0.07]}><sphereGeometry args={[0.04, 12, 10]} /><meshBasicMaterial color="#27352e" /></mesh>
     </group>)}
     <mesh position={[0, 0.77, 0.57]}><sphereGeometry args={[0.055, 12, 10]} /><meshStandardMaterial color="#4b5148" /></mesh>
+    {[-1, 1].map((side) => <group key={side} position={[side * 0.27, 0.72, 0.48]}>
+      {[-1, 0, 1].map((line) => <mesh key={line} position={[side * 0.16, line * 0.065, 0]} rotation={[0, 0, side * -0.16]}>
+        <cylinderGeometry args={[0.006, 0.006, 0.23, 5]} /><meshStandardMaterial color="#6d746b" />
+      </mesh>)}
+    </group>)
     {[-0.14, 0, 0.14].map((x, i) => <mesh key={x} position={[x, 0.52 + (i === 1 ? 0.07 : 0), 0.57]} rotation={[0, 0, Math.PI]}><coneGeometry args={[0.045, 0.11, 3]} /><meshStandardMaterial color="#858b82" /></mesh>)}
     <mesh position={[-0.48, 0.43, 0.08]}><sphereGeometry args={[0.17, 14, 10]} /><meshStandardMaterial color="#858b82" /></mesh>
     <mesh position={[0.48, 0.43, 0.08]}><sphereGeometry args={[0.17, 14, 10]} /><meshStandardMaterial color="#858b82" /></mesh>
