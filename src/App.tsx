@@ -1,6 +1,6 @@
 import { Suspense, useMemo, useState } from 'react'
 import { Loader } from '@react-three/drei'
-import { ArrowUpRight, Minus, Plus, ShoppingBag, Sun, Wind, X, Sparkles, Leaf } from 'lucide-react'
+import { ArrowUpRight, Minus, Plus, ShoppingBag, Sun, Wind, X, Sparkles, Leaf, CloudRain, CloudSun } from 'lucide-react'
 import CurtainScene from './scene/CurtainScene'
 import { useStudio, type FabricId } from './store'
 
@@ -14,10 +14,10 @@ const winds = ['无风', '微风', '清风', '大风']
 const money = (n: number) => new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 0 }).format(n)
 
 export default function App() {
-  const fabric = useStudio(s => s.fabric), wind = useStudio(s => s.wind), hour = useStudio(s => s.hour)
+  const fabric = useStudio(s => s.fabric), wind = useStudio(s => s.wind), weather = useStudio(s => s.weather), hour = useStudio(s => s.hour)
   const opening = useStudio(s => s.opening), width = useStudio(s => s.width), height = useStudio(s => s.height)
   const quantity = useStudio(s => s.quantity), bag = useStudio(s => s.bag)
-  const setFabric = useStudio(s => s.setFabric), setWind = useStudio(s => s.setWind), setHour = useStudio(s => s.setHour)
+  const setFabric = useStudio(s => s.setFabric), setWind = useStudio(s => s.setWind), setWeather = useStudio(s => s.setWeather), setHour = useStudio(s => s.setHour)
   const setOpening = useStudio(s => s.setOpening), setWidth = useStudio(s => s.setWidth), setHeight = useStudio(s => s.setHeight)
   const setQuantity = useStudio(s => s.setQuantity), addToBag = useStudio(s => s.addToBag), removeFromBag = useStudio(s => s.removeFromBag)
   const [panel, setPanel] = useState<'materials' | 'custom' | null>(null)
@@ -33,19 +33,19 @@ export default function App() {
     <div className="paint-wash" />
     <header className="story-header">
       <a className="story-brand" href="#" aria-label="风之窗首页"><span className="brand-mark">✳</span><span>WIND GARDEN<small>THE LITTLE WORLD BEHIND YOUR WINDOW</small></span></a>
-      <nav><button onClick={() => setPanel(panel === 'materials' ? null : 'materials')}>织物图鉴</button><button onClick={() => setPanel(panel === 'custom' ? null : 'custom')}>为你定制</button></nav>
+      <nav><button className="weather-toggle" onClick={() => setWeather(weather === 'sunny' ? 'rainy' : 'sunny')}><span className="weather-icon">{weather === 'sunny' ? <CloudRain size={14}/> : <CloudSun size={14}/>}</span>{weather === 'sunny' ? '切换雨天' : '雨停了'}</button><button onClick={() => setPanel(panel === 'materials' ? null : 'materials')}>织物图鉴</button><button onClick={() => setPanel(panel === 'custom' ? null : 'custom')}>为你定制</button></nav>
       <button className="bag-button" onClick={() => setBagOpen(true)} aria-label="打开收藏篮"><ShoppingBag size={17}/><span>{bag.length}</span></button>
     </header>
 
     <section className="story-copy">
-      <div className="chapter"><span>✦</span> 一匹布的光影实验 · CURTAIN STUDY 01</div>
-      <h1>让窗帘，<br/><em>成为风景。</em></h1>
-      <p>看见每一道褶皱，感受每一寸透光。<br/>亲手拉开、合拢，让布料回应风。</p>
+      <div className="chapter"><span>✦</span> 森林巴士站 · A WINDOW INTO THE FOREST</div>
+      <h1>拉开窗帘，<br/><em>遇见森林。</em></h1>
+      <p>雨落在森林，风经过窗边。<br/>拉开窗帘，看看今天谁来做客。</p>
       <button className="discover" onClick={() => setPanel('materials')}>亲手挑选一匹布 <ArrowUpRight size={16}/></button>
       <div className="story-caption"><span>01 / 04</span><i/> A WINDOW TO A SMALLER WORLD</div>
     </section>
 
-    <div className="sprite-note"><span className="sparkle">✧</span><div><b>窗边的小小守护者</b><small>点击它，听听森林的回应</small></div></div>
+    <div className="sprite-note"><span className="sparkle">✧</span><div><b>{weather === 'rainy' ? '雨天巴士站 · 森林来客' : '森林里的小小访客'}</b><small>{weather === 'rainy' ? '试着拉开窗帘，看看窗外' : '夜幕降临时，留意森林深处'}</small></div></div>
 
     <section className="storybook-dock">
       <div className="dock-material">
