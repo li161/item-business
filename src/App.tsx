@@ -38,14 +38,14 @@ export default function App() {
     </header>
 
     <section className="story-copy">
-      <div className="chapter"><span>✦</span> 森林里的第一缕风 · CHAPTER 01</div>
-      <h1>让风，住进<br/><em>你的窗户。</em></h1>
-      <p>推开窗，森林就醒了。<br/>选一片喜欢的云，让阳光替你挑选窗帘。</p>
-      <button className="discover" onClick={() => setPanel('materials')}>去森林里挑一匹布 <ArrowUpRight size={16}/></button>
+      <div className="chapter"><span>✦</span> 一匹布的光影实验 · CURTAIN STUDY 01</div>
+      <h1>让窗帘，<br/><em>成为风景。</em></h1>
+      <p>看见每一道褶皱，感受每一寸透光。<br/>亲手拉开、合拢，让布料回应风。</p>
+      <button className="discover" onClick={() => setPanel('materials')}>亲手挑选一匹布 <ArrowUpRight size={16}/></button>
       <div className="story-caption"><span>01 / 04</span><i/> A WINDOW TO A SMALLER WORLD</div>
     </section>
 
-    <div className="sprite-note"><span className="sparkle">✧</span><div><b>森林守护者在这里</b><small>找到灰色小精灵，点击它试试</small></div></div>
+    <div className="sprite-note"><span className="sparkle">✧</span><div><b>窗边的小小守护者</b><small>点击它，听听森林的回应</small></div></div>
 
     <section className="storybook-dock">
       <div className="dock-material">
@@ -57,7 +57,7 @@ export default function App() {
       <div className="dock-divider"/>
       <div className="dock-control time-dock"><div className="dock-label"><Sun size={13}/> 一天的颜色 <small>TIME</small></div><div className="time-line"><input aria-label="调节时间" type="range" min="8" max="22" step=".5" value={hour} onChange={e=>setHour(Number(e.target.value))}/><b>{String(Math.floor(hour)).padStart(2,'0')}:{hour%1?'30':'00'}</b><small>{period}</small></div></div>
       <div className="dock-divider"/>
-      <div className="dock-control opening-dock"><div className="dock-label">窗帘开合 <small>OPEN</small></div><div className="time-line"><input aria-label="调节窗帘开合" type="range" min="0" max="1" step=".01" value={opening} onChange={e=>setOpening(Number(e.target.value))}/><b>{Math.round(opening*100)}%</b></div></div>
+      <div className="dock-control opening-dock"><div className="dock-label">窗帘开合 <small>CURTAIN</small></div><div className="time-line"><input aria-label="调节窗帘开合" type="range" min="0" max="1" step=".01" value={opening} onChange={e=>setOpening(Number(e.target.value))}/><b>{Math.round(opening*100)}%</b></div></div>
       <button className="custom-round" onClick={()=>setPanel('custom')} aria-label="定制窗帘"><Sparkles size={18}/><span>定制</span></button>
     </section>
 
