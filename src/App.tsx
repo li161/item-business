@@ -1,121 +1,99 @@
-import { useMemo, useState } from 'react'
-import { ArrowDown, ArrowRight, Check, ChevronLeft, ChevronRight, Copy } from 'lucide-react'
+import { useRef, useState, type PointerEvent } from 'react'
+import { ArrowDown, ArrowLeft, ArrowRight, Check, ChevronDown, Maximize2, MoveHorizontal, RotateCcw, Sun, Wind, X } from 'lucide-react'
+import { useStudio, type FabricId } from './store'
 
-const rooms = [
-  { id: 'living', name: 'THE LIVING ROOM', label: '客厅 · 柔和日光', title: '让光，慢一点。', copy: '一层轻纱，过滤刺眼的日光。让空间保留明亮，也保留松弛。', image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=2400&q=90', position: 'center 55%' },
-  { id: 'bedroom', name: 'THE BEDROOM', label: '卧室 · 安静私密', title: '把夜晚，留给自己。', copy: '柔软的织物与恰到好处的遮光，让休息成为一种被认真对待的体验。', image: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=2400&q=90', position: 'center 50%' },
-  { id: 'studio', name: 'THE STUDIO', label: '工作室 · 清透自然', title: '光线，也有秩序。', copy: '控制眩光，保留自然光。为工作、阅读和创造找到合适的亮度。', image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2400&q=90', position: 'center 55%' },
+const worlds = [
+  { name: '山谷来信', en: 'A LETTER FROM THE VALLEY', sky: '#b8d4c5', far: '#a9b994', near: '#718b70', sun: '#f6d99a', copy: '清晨的风，带着青草和远山的气息。' },
+  { name: '森林午后', en: 'AFTERNOON IN THE WOODS', sky: '#c9d7b3', far: '#9eae7f', near: '#617d61', sun: '#f4d59a', copy: '阳光穿过树梢，时间慢得刚刚好。' },
+  { name: '海边黄昏', en: 'THE LAST LIGHT BY THE SEA', sky: '#b9d0d6', far: '#c4b99b', near: '#789c9b', sun: '#f6c99a', copy: '潮汐轻轻靠岸，风把夏天留在窗边。' },
 ]
-const materials = [
-  { id: 'linen', name: '原生亚麻', en: 'PURE LINEN', price: 268, light: '柔和漫射', weight: '中等垂感', detail: '保留天然纤维的不规则肌理，越看越有温度。', image: 'https://images.pexels.com/photos/15679399/pexels-photo-15679399/free-photo-of-beige-wrinkled-fabric.jpeg?auto=compress&cs=tinysrgb&w=900' },
-  { id: 'sheer', name: '雾感纱', en: 'MIST SHEER', price: 128, light: '高透柔光', weight: '轻薄飘逸', detail: '轻盈、通透，让自然光在房间里慢慢散开。', image: 'https://images.pexels.com/photos/16260995/pexels-photo-16260995.jpeg?auto=compress&cs=tinysrgb&w=900' },
-  { id: 'velvet', name: '绒面遮光', en: 'VELVET DIMOUT', price: 328, light: '低透光', weight: '厚实饱满', detail: '细密绒面与稳定垂坠，适合需要安静的空间。', image: 'https://images.pexels.com/photos/1487821/pexels-photo-1487821.jpeg?auto=compress&cs=tinysrgb&w=900' },
-  { id: 'cotton', name: '棉麻混纺', en: 'COTTON BLEND', price: 198, light: '温和滤光', weight: '轻中克重', detail: '日常、耐看、容易打理，是空间里的长期主义。', image: 'https://images.pexels.com/photos/5908313/pexels-photo-5908313.jpeg?auto=compress&cs=tinysrgb&w=900' },
+const fabrics: { id: FabricId; name: string; en: string; color: string; price: number; detail: string }[] = [
+  { id: 'sheer', name: '晨雾薄纱', en: 'MORNING SHEER', color: '#eee5d3', price: 128, detail: '让光穿过，也让风留下' },
+  { id: 'linen', name: '原野亚麻', en: 'WILD LINEN', color: '#bca77f', price: 268, detail: '天然肌理，安静而有分量' },
+  { id: 'velvet', name: '苔色绒布', en: 'MOSS VELVET', color: '#74836b', price: 328, detail: '柔软包裹，收藏一室宁静' },
+  { id: 'blackout', name: '暮色棉布', en: 'DUSK COTTON', color: '#596d69', price: 198, detail: '把夜晚留给自己' },
 ]
-type Layer = 'single' | 'double' | 'blackout'
-const layerOptions: { id: Layer; label: string; en: string; factor: number }[] = [
-  { id: 'single', label: '单层纱帘', en: 'SHEER ONLY', factor: 1 },
-  { id: 'double', label: '纱 + 布双层', en: 'SHEER + DRAPE', factor: 1.75 },
-  { id: 'blackout', label: '单层遮光', en: 'BLACKOUT', factor: 1.25 },
-]
+const windNames = ['无风', '微风', '和风', '山风']
+
+function Scene({ world, fabric, opening, wind, onPull }: { world: number; fabric: FabricId; opening: number; wind: number; onPull: (e: PointerEvent<SVGGElement>, side: 'left' | 'right') => void }) {
+  const w = worlds[world]
+  const cloth = fabrics.find(f => f.id === fabric) ?? fabrics[1]
+  return <svg className={`storybook-scene wind-level-${wind}`} viewBox="0 0 1000 700" role="img" aria-label="可拖动的童话窗帘场景">
+    <defs>
+      <linearGradient id="room" x2="0" y2="1"><stop stopColor="#f8f1e4"/><stop offset="1" stopColor="#e7d8bd"/></linearGradient>
+      <linearGradient id="sunbeam"><stop stopColor="#fff5d8" stopOpacity=".7"/><stop offset="1" stopColor="#fff5d8" stopOpacity="0"/></linearGradient>
+      <pattern id="clothgrain" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M2 0V12M8 0V12" stroke="#fff" strokeOpacity=".18" strokeWidth="1.5"/></pattern>
+      <clipPath id="view"><rect x="210" y="100" width="580" height="455" rx="2"/></clipPath>
+    </defs>
+    <rect width="1000" height="700" fill="url(#room)"/>
+    <path d="M0 590Q240 570 490 600T1000 580V700H0Z" fill="#c5a782"/>
+    <g clipPath="url(#view)">
+      <rect x="210" y="100" width="580" height="455" fill={w.sky}/>
+      <circle cx="670" cy="200" r="55" fill={w.sun}/>
+      <path d="M170 405Q340 230 500 395T850 370V580H170Z" fill={w.far}/>
+      <path d="M170 465Q370 330 540 455T850 420V580H170Z" fill={w.near}/>
+      {Array.from({length:15},(_,i)=><g key={i} className="land-tree" style={{animationDelay:`${i*.11}s`}} transform={`translate(${235+i*39},${465+(i%3)*12})`}><path d="M0 0V-110" stroke="#5e775b" strokeWidth="7"/><circle cx="-15" cy="-105" r="25" fill={i%2?'#79936b':'#91a477'}/><circle cx="15" cy="-127" r="29" fill={i%2?'#8ca078':'#6f8a65'}/></g>)}
+      <path d="M210 100L410 100L280 555H210Z" fill="url(#sunbeam)"/>
+      <path d="M500 100V555M210 327H790" stroke="#f3e8d2" strokeWidth="13"/>
+    </g>
+    <rect x="190" y="80" width="620" height="495" rx="8" fill="none" stroke="#8c6d4c" strokeWidth="20"/>
+    <path d="M165 72Q500 55 835 72" stroke="#75583d" strokeWidth="13" strokeLinecap="round" fill="none"/>
+    <g className="drape left-drape" style={{ transform: `translateX(${-opening*145}px)` }} onPointerDown={e=>onPull(e,'left')} onPointerMove={e=>{}}><path d="M185 75Q250 95 365 80Q385 265 345 575L185 590Z" fill={cloth.color}/><path d="M185 75Q250 95 365 80Q385 265 345 575L185 590Z" fill="url(#clothgrain)"/><path d="M235 88Q270 260 235 580M292 85Q325 270 295 580" stroke="#fff" strokeOpacity=".35" strokeWidth="12" fill="none"/><path d="M185 75Q250 95 365 80" stroke="#8b7457" strokeWidth="5" fill="none"/><circle cx="274" cy="100" r="9" fill="#d7c29b"/></g>
+    <g className="drape right-drape" style={{ transform: `translateX(${opening*145}px)` }} onPointerDown={e=>onPull(e,'right')}><path d="M815 75Q750 95 635 80Q615 265 655 575L815 590Z" fill={cloth.color}/><path d="M815 75Q750 95 635 80Q615 265 655 575L815 590Z" fill="url(#clothgrain)"/><path d="M765 88Q730 260 765 580M708 85Q675 270 705 580" stroke="#fff" strokeOpacity=".35" strokeWidth="12" fill="none"/><path d="M815 75Q750 95 635 80" stroke="#8b7457" strokeWidth="5" fill="none"/><circle cx="726" cy="100" r="9" fill="#d7c29b"/></g>
+    <path d="M175 590Q500 610 825 590L850 620H150Z" fill="#a78159"/>
+    <g className="room-plant" transform="translate(95 550)"><path d="M0 0Q-15 -115 5 -195M4 -85Q-55 -130 -68 -175M6 -105Q65 -140 75 -200" stroke="#6d835e" strokeWidth="9" fill="none"/><ellipse cx="-68" cy="-177" rx="17" ry="34" fill="#879c70" transform="rotate(-35 -68 -177)"/><ellipse cx="76" cy="-201" rx="18" ry="36" fill="#9baa79" transform="rotate(35 76 -201)"/><path d="M-36 0H45L35 82H-25Z" fill="#b77e59"/></g>
+    <text x="500" y="665" textAnchor="middle" fill="#927b5a" fontSize="13" letterSpacing="5">PULL THE CURTAINS · LET THE STORY BEGIN</text>
+  </svg>
+}
 
 export default function App() {
-  const [roomIndex, setRoomIndex] = useState(0)
-  const [materialId, setMaterialId] = useState('linen')
-  const [layer, setLayer] = useState<Layer>('double')
-  const [width, setWidth] = useState(280)
-  const [height, setHeight] = useState(260)
-  const [copied, setCopied] = useState(false)
-  const [showBrief, setShowBrief] = useState(false)
-  const room = rooms[roomIndex]
-  const material = materials.find(item => item.id === materialId) ?? materials[0]
-  const selectedLayer = layerOptions.find(item => item.id === layer) ?? layerOptions[1]
-  const area = width * height / 10000
-  const estimate = Math.round(area * material.price * selectedLayer.factor * 2.1 / 10) * 10
-  const brief = useMemo(() => [
-    'CURTAIN LAB / DESIGN BRIEF',
-    '空间：' + room.label,
-    '面料：' + material.name + ' / ' + material.en,
-    '组合：' + selectedLayer.label,
-    '尺寸：宽 ' + width + ' cm × 高 ' + height + ' cm',
-    '参考预算：¥' + estimate.toLocaleString('zh-CN') + '（仅作演示，非正式报价）',
-  ].join('\n'), [room, material, selectedLayer, width, height, estimate])
-  const copyBrief = async () => {
-    try {
-      await navigator.clipboard.writeText(brief)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1600)
-    } catch {
-      setShowBrief(true)
-    }
+  const { fabric, wind, opening, width, height, setFabric, setWind, setOpening, setWidth, setHeight } = useStudio()
+  const [world,setWorld]=useState(0)
+  const [chapter,setChapter]=useState<'window'|'fabric'|'measure'>('window')
+  const [showMeasure,setShowMeasure]=useState(false)
+  const [copied,setCopied]=useState(false)
+  const drag=useRef<{x:number;opening:number;side:'left'|'right'}|null>(null)
+  const selected=fabrics.find(f=>f.id===fabric)??fabrics[1]
+  const estimate=Math.round(width*height/10000*selected.price*1.9/10)*10
+  const startPull=(e:PointerEvent<SVGGElement>,side:'left'|'right')=>{
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    drag.current={x:e.clientX,opening,side}
   }
-  const changeRoom = (step: number) => setRoomIndex(current => (current + step + rooms.length) % rooms.length)
-
-  return <main className="atelier">
-    <section className="hero" style={{ backgroundImage: 'url(' + room.image + ')', backgroundPosition: room.position }}>
-      <div className="hero-wash" />
-      <header className="masthead">
-        <a className="brand" href="#" aria-label="Curtain Lab 首页"><span className="brand-symbol">C.</span><span><b>CURTAIN LAB</b><small>WINDOW ATELIER / 2026</small></span></a>
-        <nav><a href="#atelier">设计工作台</a><a href="#materials">面料档案</a><a href="#method">我们的方式</a></nav>
-        <button className="masthead-cta" onClick={() => setShowBrief(true)}>开始定制 <ArrowRight size={15}/></button>
-      </header>
-      <div className="hero-index"><span>01</span><i /> <span>03</span><small>SPACES TO FEEL</small></div>
-      <div className="hero-copy" key={room.id}>
-        <span className="eyebrow"><i /> {room.name}</span>
-        <h1>{room.title}</h1>
-        <p>{room.copy}</p>
-        <a className="hero-link" href="#atelier">探索窗边方案 <ArrowDown size={14}/></a>
-      </div>
-      <div className="hero-bottom">
-        <div className="room-switcher">
-          <button aria-label="上一个空间" onClick={() => changeRoom(-1)}><ChevronLeft size={17}/></button>
-          {rooms.map((item, index) => <button key={item.id} className={roomIndex === index ? 'room-dot active' : 'room-dot'} onClick={() => setRoomIndex(index)} aria-label={item.label}><span>0{index + 1}</span><i>{item.label}</i></button>)}
-          <button aria-label="下一个空间" onClick={() => changeRoom(1)}><ChevronRight size={17}/></button>
+  const movePull=(e:PointerEvent<HTMLDivElement>)=>{
+    if(!drag.current)return
+    const delta=(e.clientX-drag.current.x)/Math.max(260,e.currentTarget.clientWidth)*2.1
+    setOpening(Math.max(0,Math.min(1,drag.current.opening+(drag.current.side==='left'? -delta:delta))))
+  }
+  const finishPull=()=>{drag.current=null}
+  const copyPlan=async()=>{
+    const content=`CURTAIN TALES / ${worlds[world].name}\n面料：${selected.name}\n尺寸：${width} × ${height} cm\n预算参考：¥${estimate}`
+    try{await navigator.clipboard.writeText(content);setCopied(true);window.setTimeout(()=>setCopied(false),1500)}catch{setCopied(false)}
+  }
+  return <main className="tales-new">
+    <header className="nav-new"><a className="brand-new" href="#top"><span>✳</span> CURTAIN TALES <small>WINDOWS INTO WONDER</small></a><div className="nav-chapters"><button className={chapter==='window'?'active':''} onClick={()=>{setChapter('window');document.getElementById('experience')?.scrollIntoView({behavior:'smooth'})}}>01 窗边</button><button className={chapter==='fabric'?'active':''} onClick={()=>{setChapter('fabric');document.getElementById('materials')?.scrollIntoView({behavior:'smooth'})}}>02 面料</button><button className={chapter==='measure'?'active':''} onClick={()=>{setChapter('measure');setShowMeasure(true)}}>03 定制</button></div><button className="nav-action" onClick={()=>setShowMeasure(true)}>设计我的窗 <ArrowRight size={15}/></button></header>
+    <section className="hero-new" id="top">
+      <div className="hero-topline"><span>AN INTERACTIVE CURTAIN ATELIER</span><span>VOL. 01 — THE WIND COLLECTION</span></div>
+      <div className="hero-title"><span className="eyebrow">✳ 一扇窗，就是一个小小的世界</span><h1>把风，<em>请进来。</em></h1><p>不是挑选一块窗帘，而是亲手编排光、风与房间的关系。</p></div>
+      <div className="experience" id="experience">
+        <div className="scene-head"><div><span>YOUR WINDOW / 0{world+1}</span><h2>{worlds[world].name}</h2><p>{worlds[world].copy}</p></div><div className="world-switch"><button aria-label="上一个场景" onClick={()=>setWorld((world+2)%3)}><ArrowLeft/></button><span>0{world+1} <i>/ 03</i></span><button aria-label="下一个场景" onClick={()=>setWorld((world+1)%3)}><ArrowRight/></button></div></div>
+        <div className="stage-wrap" onPointerMove={movePull} onPointerUp={finishPull} onPointerCancel={finishPull}>
+          <Scene world={world} fabric={fabric} opening={opening} wind={wind} onPull={startPull}/>
+          <div className="stage-hint"><MoveHorizontal size={14}/> 按住窗帘边缘，向两侧拉开</div>
+          <div className="stage-side-label">{worlds[world].en}</div>
+          <div className="wind-indicator"><span className="wind-dot"/><span>{windNames[wind]}</span><small>WIND / LIVE</small></div>
         </div>
-        <span className="photo-note">INTERIOR STUDY <i>·</i> IMAGE FOR MOOD REFERENCE</span>
+        <div className="stage-controls"><div className="wind-control"><span><Wind size={16}/> 风的力度</span><div className="wind-steps">{windNames.map((name,i)=><button key={name} onClick={()=>setWind(i as 0|1|2|3)} className={wind===i?'active':''}><i/>{name}</button>)}</div></div><div className="opening-control"><span>窗帘开合</span><input aria-label="窗帘开合" type="range" min="0" max="1" step=".01" value={opening} onChange={e=>setOpening(Number(e.target.value))}/><b>{Math.round(opening*100)}%</b><button aria-label="重置窗帘" onClick={()=>setOpening(.28)}><RotateCcw size={14}/></button></div></div>
       </div>
-      <div className="hero-vertical">LIGHT / TEXTURE / HOME</div>
+      <div className="hero-foot"><span>SCROLL TO COMPOSE YOUR SPACE</span><ArrowDown size={16}/><span>01 / 03</span></div>
     </section>
-
-    <section className="workbench" id="atelier">
-      <div className="workbench-intro">
-        <span className="section-tag">02 / BUILD YOUR CURTAIN</span>
-        <h2>从一块布开始，<br/><em>重新安排光。</em></h2>
-        <p>不是挑选一个商品，而是为你的窗户找到合适的光线、质感与比例。</p>
-        <div className="selected-material">
-          <div className="selected-image"><img src={material.image} alt={material.name + '面料实拍'}/><span>SELECTED TEXTURE</span></div>
-          <div className="selected-info"><small>当前面料 / {material.en}</small><b>{material.name}</b><p>{material.detail}</p><div><span>{material.light}</span><span>{material.weight}</span></div></div>
-        </div>
-      </div>
-      <div className="configurator">
-        <div className="config-head"><div><span className="section-tag">THE MATERIAL BAR</span><h3>选择你的材质</h3></div><span className="step-count">01 <i>/</i> 03</span></div>
-        <div className="material-grid" id="materials">
-          {materials.map((item, index) => <button key={item.id} className={materialId === item.id ? 'material-tile active' : 'material-tile'} onClick={() => setMaterialId(item.id)}>
-            <span className="tile-photo"><img src={item.image} alt={item.name}/>{materialId === item.id && <i><Check size={15}/></i>}<small>0{index + 1}</small></span>
-            <span className="tile-name"><b>{item.name}</b><small>{item.en}</small></span><span className="tile-price">¥{item.price}<small>/㎡</small></span>
-          </button>)}
-        </div>
-        <div className="config-divider"/>
-        <div className="config-head compact"><div><span className="section-tag">CURTAIN COMPOSITION</span><h3>决定空间的层次</h3></div><span className="step-count">02 <i>/</i> 03</span></div>
-        <div className="layer-picker">
-          {layerOptions.map(item => <button key={item.id} className={layer === item.id ? 'layer-choice active' : 'layer-choice'} onClick={() => setLayer(item.id)}><span className="layer-lines"><i/><i/></span><b>{item.label}</b><small>{item.en}</small>{layer === item.id && <Check size={13}/>}</button>)}
-        </div>
-        <div className="config-divider"/>
-        <div className="config-head compact"><div><span className="section-tag">WINDOW MEASUREMENTS</span><h3>输入窗户尺寸</h3></div><span className="step-count">03 <i>/</i> 03</span></div>
-        <div className="measure-grid">
-          <label><span>窗宽 <small>WIDTH</small></span><div><input type="number" min="60" max="1200" value={width} onChange={event => setWidth(Math.max(60, Math.min(1200, Number(event.target.value) || 60)))}/><b>cm</b></div><input className="range" type="range" min="60" max="600" step="10" value={Math.min(width, 600)} onChange={event => setWidth(Number(event.target.value))}/></label>
-          <label><span>窗高 <small>HEIGHT</small></span><div><input type="number" min="80" max="600" value={height} onChange={event => setHeight(Math.max(80, Math.min(600, Number(event.target.value) || 80)))}/><b>cm</b></div><input className="range" type="range" min="120" max="400" step="10" value={Math.min(height, 400)} onChange={event => setHeight(Number(event.target.value))}/></label>
-        </div>
-        <div className="estimate-row"><div><span>ESTIMATED RANGE</span><small>根据面料与尺寸生成 · 非正式报价</small></div><strong>¥{estimate.toLocaleString('zh-CN')}</strong></div>
-        <button className="brief-button" onClick={copyBrief}>{copied ? '方案已复制' : '复制我的定制方案'} {copied ? <Check size={16}/> : <ArrowRight size={16}/>}</button>
-      </div>
+    <section className="materials-new" id="materials">
+      <div className="section-kicker">02 — TOUCH THE TEXTURE</div><div className="material-heading"><h2>让光，落在不同的质地上。</h2><p>选择面料，窗边的整个世界都会随之改变。</p></div>
+      <div className="material-layout"><div className="fabric-list">{fabrics.map((f,i)=><button key={f.id} className={fabric===f.id?'fabric-row chosen':'fabric-row'} onClick={()=>setFabric(f.id)}><span className="fabric-number">0{i+1}</span><span className="fabric-chip" style={{'--fabric':f.color} as React.CSSProperties}/><span className="fabric-name"><b>{f.name}</b><small>{f.en}</small></span><span className="fabric-detail">{f.detail}</span><span className="fabric-price">¥{f.price}<small>/㎡</small></span>{fabric===f.id&&<Check size={17}/>}</button>)}</div><div className="material-note"><div className="fabric-large" style={{'--fabric':selected.color} as React.CSSProperties}><span/><span/><span/><i>TEXTURE STUDY / 0{fabrics.findIndex(f=>f.id===fabric)+1}</i></div><div><small>NOW IN YOUR WINDOW</small><h3>{selected.name}</h3><p>{selected.detail}。让材质本身，成为空间的情绪。</p></div></div></div>
     </section>
-
-    <section className="manifesto" id="method">
-      <div className="manifesto-image"><img src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1800&q=85" alt="自然材质与光影交织的室内空间"/><span>THE BEAUTY OF THE EVERYDAY</span></div>
-      <div className="manifesto-copy"><span className="section-tag">03 / A MORE THOUGHTFUL WINDOW</span><h2>窗帘不是背景。<br/><em>它决定光如何进入生活。</em></h2><p>我们从空间、朝向、生活习惯和面料本身出发。先理解你需要怎样的光，再决定窗帘应该是什么样子。</p><div className="manifesto-points"><div><b>01</b><span>看空间</span><small>光线方向与室内比例</small></div><div><b>02</b><span>选材质</span><small>触感、垂感与透光表现</small></div><div><b>03</b><span>做定制</span><small>尺寸、褶皱与安装方式</small></div></div></div>
-    </section>
-    <footer className="footer"><a className="brand dark" href="#"><span className="brand-symbol">C.</span><span><b>CURTAIN LAB</b><small>WINDOW ATELIER / 2026</small></span></a><span>DESIGNED AROUND THE LIGHT.</span><button onClick={() => setShowBrief(true)}>带着你的窗户来 <ArrowRight size={14}/></button></footer>
-    {showBrief && <div className="brief-overlay" onClick={() => setShowBrief(false)}><section className="brief-modal" onClick={event => event.stopPropagation()}><button className="modal-close" onClick={() => setShowBrief(false)}>×</button><span className="section-tag">YOUR WINDOW BRIEF</span><h2>把你的想法带走。</h2><p>复制这份配置，继续与设计顾问沟通。实际用料、工艺和价格需现场复尺后确认。</p><pre>{brief}</pre><button className="brief-button" onClick={copyBrief}>{copied ? '已复制' : '复制定制清单'} <Copy size={15}/></button></section></div>}
+    <section className="measure-new" id="measure"><div><span className="section-kicker">03 — MADE FOR YOUR WINDOW</span><h2>给这段风景，<br/><em>一个刚好的尺寸。</em></h2><p>输入窗户尺寸，生成你的专属窗边提案。</p><button className="measure-open" onClick={()=>setShowMeasure(true)}>打开尺寸工作台 <Maximize2 size={15}/></button></div><div className="measure-preview"><div className="mini-window"><div className="mini-sun"/><div className="mini-hill"/><div className="mini-curtain"/></div><span>YOUR WINDOW, YOUR WEATHER.</span><b>{width} × {height} <small>CM</small></b><small>ESTIMATED FROM ¥{estimate.toLocaleString('zh-CN')}</small></div></section>
+    <footer className="footer-new"><span>✳ CURTAIN TALES</span><p>让风进来，让日子慢下来。</p><small>AN OPEN WINDOW TO A SMALLER, SOFTER WORLD · 2026</small></footer>
+    {showMeasure&&<div className="measure-overlay" onClick={()=>setShowMeasure(false)}><section className="measure-drawer" onClick={e=>e.stopPropagation()}><button className="drawer-close" onClick={()=>setShowMeasure(false)} aria-label="关闭"><X/></button><span className="section-kicker">YOUR WINDOW / CUSTOM STUDIO</span><h2>把尺寸，交给这扇窗。</h2><p>我们会根据面料与尺寸，给出一份初步预算。</p><div className="dimension-fields"><label>宽度 / WIDTH<input type="number" min="60" max="800" value={width} onChange={e=>setWidth(Math.max(60,Math.min(800,Number(e.target.value)||60)))}/> <small>CM</small></label><label>高度 / HEIGHT<input type="number" min="80" max="500" value={height} onChange={e=>setHeight(Math.max(80,Math.min(500,Number(e.target.value)||80)))}/> <small>CM</small></label></div><div className="drawer-summary"><span>当前面料 <b>{selected.name}</b></span><span>参考预算 <strong>¥{estimate.toLocaleString('zh-CN')}</strong></span></div><button className="copy-proposal" onClick={copyPlan}>{copied?<><Check size={16}/> 提案已复制</>:<>复制我的窗边提案 <ArrowRight size={16}/></>}</button><small className="estimate-disclaimer">演示估算，最终价格以现场测量与方案确认为准。</small></section></div>}
+    <button className="back-top" onClick={()=>window.scrollTo({top:0,behavior:'smooth'})}><ChevronDown size={16}/></button>
   </main>
 }
