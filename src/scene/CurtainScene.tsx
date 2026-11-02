@@ -328,11 +328,99 @@ function OutdoorGarden() {
   </group>
 }
 
+
+function CamphorTree() {
+  const canopy = useRef<THREE.Group>(null)
+  useFrame(({ clock }) => {
+    if (canopy.current) canopy.current.rotation.z = Math.sin(clock.elapsedTime * 0.22) * 0.012
+  })
+  return <group position={[0.15, 0.12, -0.16]}>
+    <mesh position={[0, 1.35, 0]} rotation={[0, 0, -0.06]}><cylinderGeometry args={[0.13, 0.31, 2.7, 9]} /><meshBasicMaterial color="#66533f" /></mesh>
+    {[-1, 1].map((side) => <mesh key={side} position={[side * 0.22, 0.34, 0]} rotation={[0, 0, side * -0.55]}><cylinderGeometry args={[0.045, 0.09, 1.05, 7]} /><meshBasicMaterial color="#66533f" /></mesh>)}
+    <group ref={canopy} position={[0, 2.7, 0]}>
+      {[[0,0,0,1.12],[-.62,.16,0,.78],[.65,.18,0,.82],[-.25,.58,0,.76],[.35,.72,0,.68],[0,-.45,0,.72]].map(([x,y,z,r],i)=><mesh key={i} position={[x,y,z]}><sphereGeometry args={[r,18,14]} /><meshBasicMaterial color={i%2 ? '#486b4c' : '#587b52'} /></mesh>)}
+      <mesh position={[0,.12,.02]}><sphereGeometry args={[.52,16,12]} /><meshBasicMaterial color="#76915c" /></mesh>
+    </group>
+  </group>
+}
+
+function CatBus() {
+  const bus = useRef<THREE.Group>(null)
+  const hour = useStudio((s) => s.hour)
+  const visible = hour >= 18.5 || hour < 7
+  useFrame(({ clock }, delta) => {
+    if (!bus.current || !visible) return
+    bus.current.position.x += delta * 0.62
+    if (bus.current.position.x > 4.2) bus.current.position.x = -4.2
+    bus.current.position.y = 1.18 + Math.sin(clock.elapsedTime * 3.2) * 0.045
+    bus.current.rotation.z = Math.sin(clock.elapsedTime * 2.1) * 0.018
+  })
+  return <group ref={bus} visible={visible} position={[-4.2, 1.18, -2.18]} scale={0.48}>
+    <mesh position={[0,0,0]} scale={[1.65,.62,.52]}><sphereGeometry args={[1,24,16]} /><meshStandardMaterial color="#c78b45" roughness={.82} /></mesh>
+    <mesh position={[1.05,.13,.02]} scale={[.58,.58,.5]}><sphereGeometry args={[1,20,14]} /><meshStandardMaterial color="#d49a50" roughness={.78} /></mesh>
+    <mesh position={[1.28,.35,.36]} rotation={[0,0,.18]}><coneGeometry args={[.2,.56,3]} /><meshStandardMaterial color="#bd8040" /></mesh>
+    <mesh position={[.82,.35,.36]} rotation={[0,0,-.18]}><coneGeometry args={[.2,.56,3]} /><meshStandardMaterial color="#bd8040" /></mesh>
+    {[-.55,0,.52].map((x,i)=><mesh key={x} position={[x,.17,.48]}><boxGeometry args={[.36,.32,.035]} /><meshStandardMaterial color={i===1 ? '#f5d98a' : '#b8d2c2'} emissive={i===1 ? '#d9a34e' : '#000000'} emissiveIntensity={i===1 ? .3 : 0} /></mesh>)}
+    <mesh position={[1.3,.12,.48]}><sphereGeometry args={[.075,12,10]} /><meshBasicMaterial color="#fff4cb" /></mesh>
+    {[-.9,-.35,.35,.9].map((x,i)=><group key={x} position={[x,-.37,.08]}>
+      <mesh position={[0,-.18,0]} rotation={[0,0,(i%2 ? -.22 : .22)]}><capsuleGeometry args={[.075,.38,4,8]} /><meshStandardMaterial color="#8d6040" /></mesh>
+      <mesh position={[0,-.38,.03]}><sphereGeometry args={[.13,12,8]} /><meshStandardMaterial color="#a87343" /></mesh>
+    </group>)}
+    <mesh position={[-1.55,-.02,0]} rotation={[0,0,-.65]}><capsuleGeometry args={[.07,.75,4,8]} /><meshStandardMaterial color="#c78b45" /></mesh>
+  </group>
+}
+
+function SootSprite({ position, delay }: { position: [number,number,number]; delay: number }) {
+  const sprite = useRef<THREE.Group>(null)
+  useFrame(({ clock }) => {
+    if (!sprite.current) return
+    sprite.current.position.y = position[1] + Math.sin(clock.elapsedTime * 2.4 + delay) * .035
+    sprite.current.rotation.z = Math.sin(clock.elapsedTime * 1.4 + delay) * .08
+  })
+  return <group ref={sprite} position={position} scale={.16} onClick={(e) => { e.stopPropagation(); if(sprite.current) sprite.current.position.y += .18 }} onPointerOver={() => { document.body.style.cursor = 'pointer' }} onPointerOut={() => { document.body.style.cursor = '' }}>
+    <mesh><sphereGeometry args={[.48,16,12]} /><meshStandardMaterial color="#242820" roughness={1} /></mesh>
+    {[-.17,.17].map((x)=><group key={x} position={[x,.09,.42]}>
+      <mesh><sphereGeometry args={[.105,12,10]} /><meshBasicMaterial color="#fff8e7" /></mesh>
+      <mesh position={[0,0,.075]}><sphereGeometry args={[.047,10,8]} /><meshBasicMaterial color="#20231e" /></mesh>
+    </group>)}
+    {Array.from({length:8},(_,i)=><mesh key={i} position={[Math.cos(i*Math.PI/4)*.42,Math.sin(i*Math.PI/4)*.42,.02]}><sphereGeometry args={[.065,8,6]} /><meshBasicMaterial color="#242820" /></mesh>)}
+  </group>
+}
+
+function Rainfall() {
+  const weather = useStudio((s) => s.weather)
+  const geometry = useMemo(() => {
+    const positions = new Float32Array(180 * 3)
+    for (let i=0;i<180;i++) {
+      positions[i*3] = (Math.random()-.5)*5.2
+      positions[i*3+1] = Math.random()*4.7
+      positions[i*3+2] = -2.28
+    }
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position',new THREE.BufferAttribute(positions,3))
+    return g
+  }, [])
+  useFrame((_,delta) => {
+    if (weather !== 'rainy') return
+    const p = geometry.attributes.position as THREE.BufferAttribute
+    for(let i=0;i<p.count;i++) {
+      p.setY(i,p.getY(i)-delta*(2.8+(i%7)*.18))
+      p.setX(i,p.getX(i)-delta*.22)
+      if(p.getY(i)<.15) { p.setY(i,4.8); p.setX(i,(Math.random()-.5)*5.2) }
+    }
+    p.needsUpdate = true
+  })
+  return <points geometry={geometry} visible={weather === 'rainy'}>
+    <pointsMaterial color="#d9e7e4" size={.035} transparent opacity={.72} sizeAttenuation />
+  </points>
+}
+
 function WindowWall() {
   const hour = useStudio((s) => s.hour)
+  const weather = useStudio((s) => s.weather)
   const night = hour >= 19 || hour < 7
   const daylight = THREE.MathUtils.clamp(1 - Math.abs(hour - 13) / 10, 0.08, 1)
-  const sky = night ? '#293b4c' : hour < 10 ? '#e6c9a4' : hour > 17 ? '#d99b72' : '#a9c6c7'
+  const sky = weather === 'rainy' ? '#718b91' : night ? '#293b4c' : hour < 10 ? '#e6c9a4' : hour > 17 ? '#d99b72' : '#a9c6c7'
   return (
     <group>
       <mesh position={[0, 2.45, -2.65]} receiveShadow>
@@ -348,6 +436,9 @@ function WindowWall() {
         <meshBasicMaterial color={sky} />
       </mesh>
       <OutdoorGarden />
+      <CamphorTree />
+      <Rainfall />
+      <CatBus />
       <mesh position={[0, 2.42, -2.41]}>
         <boxGeometry args={[0.055, 4.3, 0.08]} />
         <meshStandardMaterial color="#f5f1e8" roughness={0.28} />
@@ -461,6 +552,9 @@ function RoomScene() {
       <CurtainPanel side="left" />
       <CurtainPanel side="right" />
       <ForestSpirit />
+      <SootSprite position={[-2.42,0.23,-1.34]} delay={0.2} />
+      <SootSprite position={[-2.12,0.18,-1.42]} delay={1.4} />
+      <SootSprite position={[2.2,0.2,-1.38]} delay={2.2} />
       <ContactShadows position={[0, 0.015, 0]} opacity={0.3} scale={12} blur={2.5} far={5} />
       {/* Fully local lighting: do not block scene startup on a remote HDRI download. */}
       <hemisphereLight args={['#fff7e8', '#817969', 1.15]} />
