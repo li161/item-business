@@ -52,19 +52,18 @@ export default function App() {
   const [chapter,setChapter]=useState<'window'|'fabric'|'measure'>('window')
   const [showMeasure,setShowMeasure]=useState(false)
   const [copied,setCopied]=useState(false)
-  const drag=useRef<{x:number;opening:number}|null>(null)
+  const drag=useRef<{x:number;opening:number;side:'left'|'right'}|null>(null)
   const selected=fabrics.find(f=>f.id===fabric)??fabrics[1]
   const estimate=Math.round(width*height/10000*selected.price*1.9/10)*10
   const startPull=(e:PointerEvent<SVGGElement>,side:'left'|'right')=>{
     e.preventDefault()
     e.currentTarget.setPointerCapture(e.pointerId)
-    drag.current={x:e.clientX,opening}
-    ;(e.currentTarget as SVGGElement).dataset.side=side
+    drag.current={x:e.clientX,opening,side}
   }
-  const movePull=(e:PointerEvent<SVGSVGElement>)=>{
+  const movePull=(e:PointerEvent<HTMLDivElement>)=>{
     if(!drag.current)return
     const delta=(e.clientX-drag.current.x)/Math.max(260,e.currentTarget.clientWidth)*2.1
-    setOpening(Math.max(0,Math.min(1,drag.current.opening+(e.currentTarget.querySelector('[data-side="left"]')? -delta:delta))))
+    setOpening(Math.max(0,Math.min(1,drag.current.opening+(drag.current.side==='left'? -delta:delta))))
   }
   const finishPull=()=>{drag.current=null}
   const copyPlan=async()=>{
