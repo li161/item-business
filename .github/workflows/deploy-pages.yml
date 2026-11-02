@@ -23,6 +23,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Validate Three.js module syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path("index.html").read_text()
+          match = re.search(r'<script type="module">([\\s\\S]*?)</script>', html)
+          if not match:
+              raise SystemExit("Three.js module script not found")
+          Path("/tmp/curtain-lab-check.mjs").write_text(match.group(1))
+          PY
+          node --check /tmp/curtain-lab-check.mjs
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload site
