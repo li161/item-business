@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 
 export type FabricId = 'sheer' | 'linen' | 'velvet' | 'blackout'
-export type WindLevel = 0 | 1 | 2 | 3
+export type WindLevel = 0 | 1 | 2 | 3\nexport type WeatherMode = 'sunny' | 'rainy'
 
 type StudioState = {
   fabric: FabricId
