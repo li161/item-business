@@ -409,6 +409,44 @@ function WindowWall() {
   )
 }
 
+
+function ForestSpirit() {
+  const spirit = useRef<THREE.Group>(null)
+  const jumpVelocity = useRef(0)
+  const jumpHeight = useRef(0)
+  useFrame(({ clock }, delta) => {
+    if (!spirit.current) return
+    const dt = Math.min(delta, 0.04)
+    jumpVelocity.current -= 5.8 * dt
+    jumpHeight.current = Math.max(0, jumpHeight.current + jumpVelocity.current * dt)
+    if (jumpHeight.current === 0) jumpVelocity.current = 0
+    spirit.current.position.y = 0.38 + jumpHeight.current + Math.sin(clock.elapsedTime * 2.1) * 0.025
+    spirit.current.rotation.z = Math.sin(clock.elapsedTime * 0.72) * 0.025
+    spirit.current.rotation.y = Math.sin(clock.elapsedTime * 0.42) * 0.06
+  })
+  const hop = (event: any) => {
+    event.stopPropagation()
+    jumpVelocity.current = 2.5
+  }
+  return <group ref={spirit} position={[2.52, 0.38, -1.12]} scale={0.78} onClick={hop}>
+    <mesh position={[0, 0.68, 0]} castShadow><sphereGeometry args={[0.58, 24, 18]} /><meshStandardMaterial color="#8d9289" roughness={0.96} /></mesh>
+    <mesh position={[-0.34, 1.22, 0.015]} rotation={[0, 0, 0.16]}><coneGeometry args={[0.14, 0.48, 9]} /><meshStandardMaterial color="#858b82" roughness={0.95} /></mesh>
+    <mesh position={[0.34, 1.22, 0.015]} rotation={[0, 0, -0.16]}><coneGeometry args={[0.14, 0.48, 9]} /><meshStandardMaterial color="#858b82" roughness={0.95} /></mesh>
+    <mesh position={[0, 0.48, 0.43]} scale={[0.68, 0.7, 0.23]}><sphereGeometry args={[0.48, 20, 16]} /><meshStandardMaterial color="#e7e2d2" roughness={1} /></mesh>
+    {[-0.2, 0.2].map((x) => <group key={x} position={[x, 0.91, 0.51]}>
+      <mesh><sphereGeometry args={[0.085, 14, 12]} /><meshStandardMaterial color="#fffdf2" /></mesh>
+      <mesh position={[0, 0, 0.07]}><sphereGeometry args={[0.04, 12, 10]} /><meshBasicMaterial color="#27352e" /></mesh>
+    </group>)}
+    <mesh position={[0, 0.77, 0.57]}><sphereGeometry args={[0.055, 12, 10]} /><meshStandardMaterial color="#4b5148" /></mesh>
+    {[-0.14, 0, 0.14].map((x, i) => <mesh key={x} position={[x, 0.52 + (i === 1 ? 0.07 : 0), 0.57]} rotation={[0, 0, Math.PI]}><coneGeometry args={[0.045, 0.11, 3]} /><meshStandardMaterial color="#858b82" /></mesh>)}
+    <mesh position={[-0.48, 0.43, 0.08]}><sphereGeometry args={[0.17, 14, 10]} /><meshStandardMaterial color="#858b82" /></mesh>
+    <mesh position={[0.48, 0.43, 0.08]}><sphereGeometry args={[0.17, 14, 10]} /><meshStandardMaterial color="#858b82" /></mesh>
+    <mesh position={[-0.25, 0.08, 0.08]} scale={[0.24, 0.14, 0.27]}><sphereGeometry args={[1, 12, 10]} /><meshStandardMaterial color="#777e75" /></mesh>
+    <mesh position={[0.25, 0.08, 0.08]} scale={[0.24, 0.14, 0.27]}><sphereGeometry args={[1, 12, 10]} /><meshStandardMaterial color="#777e75" /></mesh>
+    <mesh position={[0, 1.49, 0.03]} rotation={[0, 0, -0.48]} scale={[0.24, 0.09, 0.035]}><sphereGeometry args={[1, 14, 10]} /><meshStandardMaterial color="#75945d" roughness={1} /></mesh>
+    <mesh position={[0, 1.49, 0.06]} rotation={[0, 0, -0.48]}><cylinderGeometry args={[0.008, 0.008, 0.35, 5]} /><meshStandardMaterial color="#55784d" /></mesh>
+  </group>
+}
 function RoomScene() {
   return (
     <>
@@ -417,6 +455,7 @@ function RoomScene() {
       <WindowWall />
       <CurtainPanel side="left" />
       <CurtainPanel side="right" />
+      <ForestSpirit />
       <ContactShadows position={[0, 0.015, 0]} opacity={0.3} scale={12} blur={2.5} far={5} />
       {/* Fully local lighting: do not block scene startup on a remote HDRI download. */}
       <hemisphereLight args={['#fff7e8', '#817969', 1.15]} />
