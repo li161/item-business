@@ -54,44 +54,102 @@ function WindowView(){
  </group>
 }
 function RainWindow(){const ref=useRef<THREE.Points>(null);const geo=useMemo(()=>{const a=new Float32Array(180*3);for(let i=0;i<180;i++){a[i*3]=(Math.random()-.5)*6.4;a[i*3+1]=Math.random()*4.4;a[i*3+2]=-6.5}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(a,3));return g},[]);useFrame((_,dt)=>{const p=geo.attributes.position as THREE.BufferAttribute;for(let i=0;i<p.count;i++){p.setY(i,p.getY(i)-dt*2.8);if(p.getY(i)<.7)p.setY(i,5)}p.needsUpdate=true});return <points ref={ref} geometry={geo}><pointsMaterial color="#e0eceb" size={.025} transparent opacity={.6}/></points>}
-function makeFabricTexture(){
- const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;
- const ctx=canvas.getContext('2d');if(!ctx)return null;
- ctx.fillStyle='#d9d4c8';ctx.fillRect(0,0,512,512);
- for(let y=0;y<512;y+=2){ctx.strokeStyle=y%4===0?'rgba(255,255,255,.24)':'rgba(70,58,43,.10)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,y+.5);ctx.lineTo(512,y+.5);ctx.stroke()}
- for(let x=0;x<512;x+=3){ctx.strokeStyle=x%6===0?'rgba(255,255,255,.20)':'rgba(75,65,52,.09)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+.5,0);ctx.lineTo(x+.5,512);ctx.stroke()}
- for(let i=0;i<1800;i++){const x=(i*97)%512,y=(i*193)%512;ctx.fillStyle=i%2?'rgba(255,255,255,.16)':'rgba(55,48,39,.08)';ctx.fillRect(x,y,1,2)}
- const texture=new THREE.CanvasTexture(canvas);texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(2.2,2.8);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=8;return texture
+function makeFabricMaps(){
+ const colorCanvas=document.createElement('canvas');colorCanvas.width=1024;colorCanvas.height=1024;
+ const colorCtx=colorCanvas.getContext('2d');
+ const bumpCanvas=document.createElement('canvas');bumpCanvas.width=1024;bumpCanvas.height=1024;
+ const bumpCtx=bumpCanvas.getContext('2d');
+ if(!colorCtx||!bumpCtx)return {map:null,bumpMap:null};
+ colorCtx.fillStyle='#d8d2c6';colorCtx.fillRect(0,0,1024,1024);
+ bumpCtx.fillStyle='rgb(128,128,128)';bumpCtx.fillRect(0,0,1024,1024);
+ // Fine warp and weft yarns, with alternating thread thickness and tiny slubs.
+ for(let y=0;y<1024;y+=4){
+  const light=y%8===0;
+  colorCtx.strokeStyle=light?'rgba(255,255,255,.22)':'rgba(65,56,45,.13)';
+  colorCtx.lineWidth=light?1.8:1.25;colorCtx.beginPath();colorCtx.moveTo(0,y);colorCtx.lineTo(1024,y);colorCtx.stroke();
+  bumpCtx.strokeStyle=light?'rgb(153,153,153)':'rgb(105,105,105)';
+  bumpCtx.lineWidth=light?2:1.3;bumpCtx.beginPath();bumpCtx.moveTo(0,y);bumpCtx.lineTo(1024,y);bumpCtx.stroke();
+ }
+ for(let x=0;x<1024;x+=4){
+  const light=x%8===0;
+  colorCtx.strokeStyle=light?'rgba(255,255,255,.18)':'rgba(58,50,42,.12)';
+  colorCtx.lineWidth=light?1.8:1.2;colorCtx.beginPath();colorCtx.moveTo(x,0);colorCtx.lineTo(x,1024);colorCtx.stroke();
+  bumpCtx.strokeStyle=light?'rgb(148,148,148)':'rgb(111,111,111)';
+  bumpCtx.lineWidth=light?2:1.2;bumpCtx.beginPath();bumpCtx.moveTo(x,0);bumpCtx.lineTo(x,1024);bumpCtx.stroke();
+ }
+ for(let i=0;i<3200;i++){
+  const x=(i*127)%1024,y=(i*293)%1024,w=1+(i%3);
+  colorCtx.fillStyle=i%2?'rgba(255,255,255,.2)':'rgba(50,44,36,.12)';colorCtx.fillRect(x,y,w,1);
+  bumpCtx.fillStyle=i%2?'rgb(174,174,174)':'rgb(86,86,86)';bumpCtx.fillRect(x,y,w,1);
+ }
+ const map=new THREE.CanvasTexture(colorCanvas),bumpMap=new THREE.CanvasTexture(bumpCanvas);
+ for(const t of [map,bumpMap]){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1.6,2.4);t.anisotropy=8}
+ map.colorSpace=THREE.SRGBColorSpace;
+ return {map,bumpMap};
 }
 function Curtain({side}:{side:-1|1}){
- const mesh=useRef<THREE.Mesh>(null),geometry=useMemo(()=>new THREE.PlaneGeometry(2.12,4.08,52,64),[])
- const opening=useStudio(s=>s.opening),wind=useStudio(s=>s.wind),fabric=useStudio(s=>s.fabric)
- const texture=useMemo(()=>makeFabricTexture(),[])
- useFrame(({clock},delta)=>{if(!mesh.current)return;const a=geometry.attributes.position as THREE.BufferAttribute,t=clock.elapsedTime;
-  for(let i=0;i<a.count;i++){const x=a.getX(i),y=a.getY(i),u=(x+1.06)/2.12,v=(y+2.04)/4.08;
-   const gather=Math.pow(1-v,.72),pleat=(Math.cos(u*Math.PI*18)+.24*Math.cos(u*Math.PI*36))* (.068+.045*gather);
-   const broadFold=Math.sin(u*Math.PI*6+v*.7)*.018;
-   const breeze=(Math.sin(t*1.35+u*5.8+v*2.2)*.035+Math.sin(t*.82-u*8+v*3)*.018)*(wind/3)*(.2+v);
-   const hemWave=Math.sin(u*Math.PI*5+t*.75)*.035*v*v*(wind/3);
-   a.setZ(i,pleat+broadFold+breeze+hemWave);
+ const mesh=useRef<THREE.Mesh>(null);
+ const geometry=useMemo(()=>{
+  const g=new THREE.PlaneGeometry(2.12,4.08,72,88);
+  const pos=g.attributes.position as THREE.BufferAttribute;
+  const base=new Float32Array(pos.array.length);base.set(pos.array);
+  g.userData.basePositions=base;return g;
+ },[]);
+ const opening=useStudio(s=>s.opening),wind=useStudio(s=>s.wind),fabric=useStudio(s=>s.fabric);
+ const maps=useMemo(()=>makeFabricMaps(),[]);
+ const isSheer=fabric==='sheer',isVelvet=fabric==='velvet',isBlackout=fabric==='blackout';
+ useFrame(({clock},delta)=>{
+  if(!mesh.current)return;
+  const pos=geometry.attributes.position as THREE.BufferAttribute;
+  const base=geometry.userData.basePositions as Float32Array;
+  const t=clock.elapsedTime,windPower=wind/3;
+  for(let i=0;i<pos.count;i++){
+   const ix=i*3,x=base[ix],y=base[ix+1],u=(x+1.06)/2.12,v=(y+2.04)/4.08;
+   // Deep, continuous vertical folds: tightly gathered at the heading, softer at the hem.
+   const foldPhase=u*Math.PI*18;
+   const foldDepth=.105+.035*Math.pow(1-v,1.4);
+   const folds=Math.cos(foldPhase)*foldDepth+.018*Math.cos(foldPhase*2+.35);
+   const secondary=Math.cos(u*Math.PI*6+v*.45)*.018;
+   // Wind travels down the fabric rather than moving the whole panel as one sheet.
+   const travelling=Math.sin(t*1.25-v*3.4+u*4.5)*.055*windPower*(.12+v*.88);
+   const edgeFlutter=Math.sin(t*1.8+v*5.5)*.035*windPower*Math.pow(Math.abs(u-.5)*2,2)*v;
+   const hemDrape=Math.sin(u*Math.PI*5+t*.65)*.025*windPower*v*v;
+   pos.setXYZ(i,x,y,folds+secondary+travelling+edgeFlutter+hemDrape);
   }
-  a.needsUpdate=true;geometry.computeVertexNormals();
-  const targetX=side*(2.42+opening*1.05);mesh.current.position.x=THREE.MathUtils.damp(mesh.current.position.x,targetX,5,delta);
-  mesh.current.scale.x=THREE.MathUtils.damp(mesh.current.scale.x,1-opening*.25,5,delta);
-  mesh.current.rotation.y=side*(-.045-opening*.07);
- })
- const isSheer=fabric==='sheer',isVelvet=fabric==='velvet';
- const panelX=side*(2.42+opening*1.05);
+  pos.needsUpdate=true;geometry.computeVertexNormals();
+  const targetX=side*(2.42+opening*1.05);
+  mesh.current.position.x=THREE.MathUtils.damp(mesh.current.position.x,targetX,4.5,delta);
+  mesh.current.scale.x=THREE.MathUtils.damp(mesh.current.scale.x,1-opening*.28,4.5,delta);
+  mesh.current.rotation.y=side*(-.035-opening*.055);
+ });
+ const panelX=side*(2.42+opening*1.05),panelWidth=1.9*(1-opening*.28);
  return <group>
   <mesh ref={mesh} geometry={geometry} position={[side*2.42,2.95,-5.03]} castShadow receiveShadow>
-   <meshPhysicalMaterial color={cloth[fabric]} map={texture??undefined} bumpMap={texture??undefined} bumpScale={isSheer?.012:.035} side={THREE.DoubleSide} roughness={isVelvet?.96:.9} metalness={0} sheen={isVelvet?1:.72} sheenRoughness={.92} sheenColor={isVelvet?'#b6a58a':'#ffffff'} transparent={isSheer} opacity={isSheer?.52:1} depthWrite={!isSheer}/>
+   <meshPhysicalMaterial
+    color={cloth[fabric]}
+    map={maps.map??undefined}
+    bumpMap={maps.bumpMap??undefined}
+    bumpScale={isSheer?.009:isVelvet?.026:.018}
+    side={THREE.DoubleSide}
+    roughness={isVelvet?.94:isSheer?.82:.88}
+    metalness={0}
+    sheen={isVelvet?1:isSheer?.28:.58}
+    sheenRoughness={isVelvet?.96:.82}
+    sheenColor={isVelvet?'#b5a28a':'#ffffff'}
+    transparent={isSheer}
+    opacity={isSheer?.46:1}
+    depthWrite={!isSheer}
+   />
   </mesh>
-  {Array.from({length:11},(_,i)=><group key={i} position={[panelX+(i/10-.5)*1.88,5.12,-5.03]}>
-   <mesh rotation={[0,0,Math.PI/2]}><torusGeometry args={[.055,.012,8,16]}/><meshStandardMaterial color="#9c805d" metalness={.55} roughness={.38}/></mesh>
-   <mesh position={[0,-.12,0]}><sphereGeometry args={[.025,8,8]}/><meshStandardMaterial color="#9c805d" metalness={.45}/></mesh>
+  {/* Header tape and stitched lower/side hems give the cloth a finished construction. */}
+  <mesh position={[panelX,4.99,-5.045]}><boxGeometry args={[2.02*(1-opening*.28),.105,.035]}/><meshStandardMaterial color={isVelvet?'#4d5746':isBlackout?'#304139':'#b9aa91'} roughness={.96}/></mesh>
+  <mesh position={[panelX, .91,-5.045]}><boxGeometry args={[2.08*(1-opening*.28),.075,.045]}/><meshStandardMaterial color={cloth[fabric]} roughness={.94}/></mesh>
+  {[-1,1].map(edge=><mesh key={edge} position={[panelX+edge*1.035*(1-opening*.28),2.95,-5.045]}><boxGeometry args={[.045,4.02,.04]}/><meshStandardMaterial color={cloth[fabric]} roughness={.94}/></mesh>)}
+  {Array.from({length:9},(_,i)=><group key={i} position={[panelX+(i/8-.5)*panelWidth,5.13,-5.03]}>
+   <mesh rotation={[0,0,Math.PI/2]}><torusGeometry args={[.052,.012,8,18]}/><meshStandardMaterial color="#927653" metalness={.58} roughness={.34}/></mesh>
+   <mesh position={[0,-.085,0]}><cylinderGeometry args={[.012,.012,.11,8]}/><meshStandardMaterial color="#927653" metalness={.45} roughness={.42}/></mesh>
   </group>)}
-  <mesh position={[0,5.2,-5.03]} rotation={[0,0,Math.PI/2]}><cylinderGeometry args={[.035,.035,6.25,12]}/><meshStandardMaterial color="#8b704f" metalness={.62} roughness={.34}/></mesh>
-  <mesh position={[panelX,5.01,-5.03]}><boxGeometry args={[.12,.16,.18]}/><meshStandardMaterial color="#b08b61" roughness={.62}/></mesh>
+  {side===-1&&<mesh position={[0,5.2,-5.03]} rotation={[0,0,Math.PI/2]}><cylinderGeometry args={[.035,.035,6.25,16]}/><meshStandardMaterial color="#8b704f" metalness={.62} roughness={.34}/></mesh>}
  </group>
 }
 function Sofa(){
