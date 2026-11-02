@@ -1,5 +1,5 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { ContactShadows, Environment } from '@react-three/drei'
+import { ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import { useMemo, useRef } from 'react'
 import { useStudio, type FabricId } from '../store'
@@ -356,7 +356,9 @@ function RoomScene() {
       <CurtainPanel side="left" />
       <CurtainPanel side="right" />
       <ContactShadows position={[0, 0.015, 0]} opacity={0.3} scale={12} blur={2.5} far={5} />
-      <Environment preset="apartment" />
+      {/* Fully local lighting: do not block scene startup on a remote HDRI download. */}
+      <hemisphereLight args={['#fff7e8', '#817969', 1.15]} />
+      <directionalLight position={[5, 7, 4]} intensity={0.42} color="#fff2dc" />
     </>
   )
 }
