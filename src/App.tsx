@@ -66,7 +66,9 @@ export default function App(){
   <div className={\`room-visual \${curtainOpen?'curtain-is-open':'curtain-is-closed'}\`}>
    {scenes.map((item,index)=><img key={item.id} className={index===activeScene?'room-image is-active':'room-image'} src={item.image} alt={item.title+'真实室内摄影'} style={{objectPosition:item.position}} loading={index===0?'eager':'lazy'}/>)}
    <div className="room-shade"/>
-   <CharacterStage />
+   <div className="photo-curtains" aria-hidden="true"><span/><span/></div>
+   <div className="light-shift" aria-hidden="true"/>
+   <CharacterStage curtainOpen={curtainOpen} onToggle={()=>setCurtainOpen(v=>!v)} />
    <header className="topbar">
     <a className="wordmark" href="#" aria-label="Curtain Lab 首页"><span className="wordmark-icon">C</span><span><b>CURTAIN LAB</b><small>WINDOW ATELIER · EST. 2026</small></span></a>
     <nav className="top-nav"><a href="#experience">灵感空间</a><a href="#materials">面料图鉴</a><a href="#process">定制流程</a></nav>
