@@ -63,7 +63,7 @@ export default function App(){
  const copyRequest=async()=>{try{await navigator.clipboard.writeText(requestText);setCopied(true);window.setTimeout(()=>setCopied(false),1800)}catch{setShowQuote(true)}}
  const prev=()=>setActiveScene(v=>(v+scenes.length-1)%scenes.length),next=()=>setActiveScene(v=>(v+1)%scenes.length)
  return <main className="curtain-app">
-  <div className={\`room-visual \${curtainOpen?'curtain-is-open':'curtain-is-closed'}\`}>
+  <div className={`room-visual ${curtainOpen?'curtain-is-open':'curtain-is-closed'}`}>
    {scenes.map((item,index)=><img key={item.id} className={index===activeScene?'room-image is-active':'room-image'} src={item.image} alt={item.title+'真实室内摄影'} style={{objectPosition:item.position}} loading={index===0?'eager':'lazy'}/>)}
    <div className="room-shade"/>
    <div className="photo-curtains" aria-hidden="true"><span/><span/></div>
