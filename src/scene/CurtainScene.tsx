@@ -27,8 +27,8 @@ type ClothState = {
 
 const SEG_X = 34
 const SEG_Y = 44
-const WIDTH = 2.34
-const HEIGHT = 4.05
+const WIDTH = 2.7
+const HEIGHT = 4.25
 const indexOf = (x: number, y: number) => y * (SEG_X + 1) + x
 
 function createCloth(): ClothState {
@@ -42,10 +42,10 @@ function createCloth(): ClothState {
     for (let x = 0; x <= SEG_X; x++) {
       const i = indexOf(x, y) * 3
       const u = x / SEG_X
-      const pleat = Math.sin(u * Math.PI * 13) * 0.065
+      const pleat = Math.sin(u * Math.PI * 16) * 0.11
       initial[i] = source[i]
       initial[i + 1] = source[i + 1]
-      initial[i + 2] = Math.cos(u * Math.PI * 13) * 0.085 + pleat
+      initial[i + 2] = Math.cos(u * Math.PI * 16) * 0.15 + pleat
     }
   }
   positions.set(initial)
@@ -138,7 +138,7 @@ function CurtainPanel({ side }: { side: 'left' | 'right' }) {
         previous[i + 1] = positions[i + 1]
         previous[i + 2] = positions[i + 2]
         const gust = Math.sin(time * 1.4 + u * 6.4 + v * 2.2) * windPower * (0.15 + v * 0.85)
-        const ripple = Math.sin(time * 2.1 + u * 16) * windPower * 0.11 * v
+        const ripple = Math.sin(time * 2.1 + u * 18) * windPower * 0.16 * v
         positions[i] += vx + gust * dt * dt * 5
         positions[i + 1] += vy - 1.15 * profile.weight * dt * dt
         positions[i + 2] += vz + (gust + ripple) * dt * dt * 8
@@ -207,6 +207,7 @@ function CurtainPanel({ side }: { side: 'left' | 'right' }) {
     geometry.computeVertexNormals()
     geometry.computeBoundingSphere()
     mesh.current.position.set(sideSign * (1.16 + opening * 1.25), 2.38, -1.78)
+    mesh.current.scale.x = 1 - opening * 0.28
   })
 
   const onPointerDown = (event: any) => {
@@ -248,7 +249,6 @@ function CurtainPanel({ side }: { side: 'left' | 'right' }) {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
-      onPointerOut={onPointerUp}
     >
       <meshPhysicalMaterial
         color={profile.color}
@@ -473,7 +473,7 @@ export default function CurtainScene() {
   return (
     <Canvas
       shadows
-      camera={{ position: [0, 2.55, 9.8], fov: 38 }}
+      camera={{ position: [0, 2.55, 8.7], fov: 34 }}
       dpr={[1, 1.5]}
       gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
       fallback={<div className="webgl-fallback">当前浏览器无法启动 WebGL，请更新浏览器或启用硬件加速。</div>}
