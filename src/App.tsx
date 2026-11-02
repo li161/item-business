@@ -31,7 +31,7 @@ function CharacterStage({ curtainOpen, onToggle }: { curtainOpen: boolean; onTog
       <ambientLight intensity={1.15} />
       <directionalLight position={[2.5, 4, 3]} intensity={2.2} castShadow />
       <directionalLight position={[-2, 2, -2]} intensity={1.1} color="#f0d7b0" />
-      <Suspense fallback={null}><CurtainMuse curtainOpen={curtainOpen} onAwaken={() => setAwake(v => !v)} /></Suspense>
+      <Suspense fallback={null}><CurtainMuse curtainOpen={curtainOpen} onAwaken={() => { setAwake(v => !v); onToggle() }} /></Suspense>
     </Canvas>
     <div className="character-caption"><span>THE LIGHT SEEKER</span><b>{curtainOpen ? '阳光，刚好落进房间' : awake ? '她正望向窗边' : '与光一起生活'}</b><small>点击人物 · 与她互动</small></div>
     <button className="curtain-pull" onClick={onToggle} aria-pressed={curtainOpen}><span className="pull-icon">{curtainOpen ? 'Ⅱ' : '↔'}</span>{curtainOpen ? '合上窗帘' : '和她一起拉开窗帘'}</button>
