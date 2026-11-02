@@ -7,31 +7,34 @@ import type { Group } from 'three'
 
 const CHARACTER_MODEL = 'https://files.innerscene.com/library/priya-3d-person-woman-athletic-walking-bf61042b/482365d4ced7c61f5686/priya-3d-person-woman-athletic-walking.glb'
 
-function CurtainMuse({ onAwaken }: { onAwaken: () => void }) {
+function CurtainMuse({ curtainOpen, onAwaken }: { curtainOpen: boolean; onAwaken: () => void }) {
   const { scene } = useGLTF(CHARACTER_MODEL)
   const group = useRef<Group>(null)
   const [turned, setTurned] = useState(false)
   useFrame((_, delta) => {
     if (!group.current) return
-    const target = turned ? -0.28 : 0
-    group.current.rotation.y += (target - group.current.rotation.y) * Math.min(1, delta * 3)
-    group.current.position.y = Math.sin(performance.now() * 0.0008) * 0.018
+    const targetRotation = curtainOpen ? -0.42 : turned ? -0.18 : 0
+    const targetX = curtainOpen ? -0.22 : 0
+    group.current.rotation.y += (targetRotation - group.current.rotation.y) * Math.min(1, delta * 2.4)
+    group.current.position.x += (targetX - group.current.position.x) * Math.min(1, delta * 1.8)
+    group.current.position.y = -1.05 + Math.sin(performance.now() * 0.0008) * 0.018
   })
   return <group ref={group} position={[0, -1.05, 0]} scale={1.08} onClick={() => { setTurned(v => !v); onAwaken() }}>
     <primitive object={scene} />
   </group>
 }
 
-function CharacterStage() {
+function CharacterStage({ curtainOpen, onToggle }: { curtainOpen: boolean; onToggle: () => void }) {
   const [awake, setAwake] = useState(false)
   return <div className="character-stage" aria-label="可交互的3D人物展示">
     <Canvas camera={{ position: [0, 0.55, 3.4], fov: 34 }} dpr={[1, 1.6]} gl={{ alpha: true, antialias: true }}>
       <ambientLight intensity={1.15} />
       <directionalLight position={[2.5, 4, 3]} intensity={2.2} castShadow />
       <directionalLight position={[-2, 2, -2]} intensity={1.1} color="#f0d7b0" />
-      <Suspense fallback={null}><CurtainMuse onAwaken={() => setAwake(v => !v)} /></Suspense>
+      <Suspense fallback={null}><CurtainMuse curtainOpen={curtainOpen} onAwaken={() => setAwake(v => !v)} /></Suspense>
     </Canvas>
-    <div className="character-caption"><span>THE LIGHT SEEKER</span><b>{awake ? '她正在感受窗边的光' : '与光一起生活'}</b><small>点击人物 · 互动一下</small></div>
+    <div className="character-caption"><span>THE LIGHT SEEKER</span><b>{curtainOpen ? '阳光，刚好落进房间' : awake ? '她正望向窗边' : '与光一起生活'}</b><small>点击人物 · 与她互动</small></div>
+    <button className="curtain-pull" onClick={onToggle} aria-pressed={curtainOpen}><span className="pull-icon">{curtainOpen ? 'Ⅱ' : '↔'}</span>{curtainOpen ? '合上窗帘' : '和她一起拉开窗帘'}</button>
     <span className="character-orbit" aria-hidden="true" />
   </div>
 }
@@ -50,7 +53,7 @@ const fabrics = [
 ]
 type Layer='sheer'|'double'|'blackout'
 export default function App(){
- const [activeScene,setActiveScene]=useState(0),[fabric,setFabric]=useState('linen'),[layer,setLayer]=useState<Layer>('double'),[width,setWidth]=useState('280'),[height,setHeight]=useState('260'),[tab,setTab]=useState<'fabric'|'measure'>('fabric'),[showQuote,setShowQuote]=useState(false),[copied,setCopied]=useState(false)
+ const [activeScene,setActiveScene]=useState(0),[curtainOpen,setCurtainOpen]=useState(false),[fabric,setFabric]=useState('linen'),[layer,setLayer]=useState<Layer>('double'),[width,setWidth]=useState('280'),[height,setHeight]=useState('260'),[tab,setTab]=useState<'fabric'|'measure'>('fabric'),[showQuote,setShowQuote]=useState(false),[copied,setCopied]=useState(false)
  const scene=scenes[activeScene],selected=fabrics.find(item=>item.id===fabric)??fabrics[0]
  const area=Math.max(0,Number(width)||0)*Math.max(0,Number(height)||0)/10000,layerFactor=layer==='double'?1.7:1
  const estimate=Math.round(area*selected.price*layerFactor*2.1/10)*10
@@ -60,7 +63,7 @@ export default function App(){
  const copyRequest=async()=>{try{await navigator.clipboard.writeText(requestText);setCopied(true);window.setTimeout(()=>setCopied(false),1800)}catch{setShowQuote(true)}}
  const prev=()=>setActiveScene(v=>(v+scenes.length-1)%scenes.length),next=()=>setActiveScene(v=>(v+1)%scenes.length)
  return <main className="curtain-app">
-  <div className="room-visual">
+  <div className={\`room-visual \${curtainOpen?'curtain-is-open':'curtain-is-closed'}\`}>
    {scenes.map((item,index)=><img key={item.id} className={index===activeScene?'room-image is-active':'room-image'} src={item.image} alt={item.title+'真实室内摄影'} style={{objectPosition:item.position}} loading={index===0?'eager':'lazy'}/>)}
    <div className="room-shade"/>
    <CharacterStage />
