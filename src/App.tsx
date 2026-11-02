@@ -45,7 +45,7 @@ export default function App() {
       <div className="story-caption"><span>01 / 04</span><i/> A WINDOW TO A SMALLER WORLD</div>
     </section>
 
-    <div className="sprite-note"><span className="sparkle">✧</span><div><b>嘘……听见风了吗？</b><small>按住窗帘，和风一起玩耍</small></div></div>
+    <div className="sprite-note"><span className="sparkle">✧</span><div><b>森林守护者在这里</b><small>找到灰色小精灵，点击它试试</small></div></div>
 
     <section className="storybook-dock">
       <div className="dock-material">
