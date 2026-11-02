@@ -54,11 +54,46 @@ function WindowView(){
  </group>
 }
 function RainWindow(){const ref=useRef<THREE.Points>(null);const geo=useMemo(()=>{const a=new Float32Array(180*3);for(let i=0;i<180;i++){a[i*3]=(Math.random()-.5)*6.4;a[i*3+1]=Math.random()*4.4;a[i*3+2]=-6.5}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(a,3));return g},[]);useFrame((_,dt)=>{const p=geo.attributes.position as THREE.BufferAttribute;for(let i=0;i<p.count;i++){p.setY(i,p.getY(i)-dt*2.8);if(p.getY(i)<.7)p.setY(i,5)}p.needsUpdate=true});return <points ref={ref} geometry={geo}><pointsMaterial color="#e0eceb" size={.025} transparent opacity={.6}/></points>}
+function makeFabricTexture(){
+ const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;
+ const ctx=canvas.getContext('2d');if(!ctx)return null;
+ ctx.fillStyle='#d9d4c8';ctx.fillRect(0,0,512,512);
+ for(let y=0;y<512;y+=2){ctx.strokeStyle=y%4===0?'rgba(255,255,255,.24)':'rgba(70,58,43,.10)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,y+.5);ctx.lineTo(512,y+.5);ctx.stroke()}
+ for(let x=0;x<512;x+=3){ctx.strokeStyle=x%6===0?'rgba(255,255,255,.20)':'rgba(75,65,52,.09)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+.5,0);ctx.lineTo(x+.5,512);ctx.stroke()}
+ for(let i=0;i<1800;i++){const x=(i*97)%512,y=(i*193)%512;ctx.fillStyle=i%2?'rgba(255,255,255,.16)':'rgba(55,48,39,.08)';ctx.fillRect(x,y,1,2)}
+ const texture=new THREE.CanvasTexture(canvas);texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(2.2,2.8);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=8;return texture
+}
 function Curtain({side}:{side:-1|1}){
- const mesh=useRef<THREE.Mesh>(null),geometry=useMemo(()=>new THREE.PlaneGeometry(2.05,4.05,32,44),[])
+ const mesh=useRef<THREE.Mesh>(null),geometry=useMemo(()=>new THREE.PlaneGeometry(2.12,4.08,52,64),[])
  const opening=useStudio(s=>s.opening),wind=useStudio(s=>s.wind),fabric=useStudio(s=>s.fabric)
- useFrame(({clock})=>{if(!mesh.current)return;const a=geometry.attributes.position as THREE.BufferAttribute;for(let i=0;i<a.count;i++){const x=a.getX(i),y=a.getY(i),u=(x+1.025)/2.05,v=(y+2.025)/4.05,t=clock.elapsedTime;const pleat=Math.cos(u*Math.PI*15)*.085;const sway=Math.sin(t*1.6+u*5+v*2)*(.018+wind*.018)*v;a.setZ(i,pleat+sway)}a.needsUpdate=true;geometry.computeVertexNormals();mesh.current.position.x=side*(2.42+opening*1.05);mesh.current.scale.x=1-opening*.22;mesh.current.rotation.y=side*(-.07-opening*.05)})
- return <group><mesh ref={mesh} geometry={geometry} position={[side*2.42,2.95,-5.03]} castShadow receiveShadow><meshPhysicalMaterial color={cloth[fabric]} side={THREE.DoubleSide} roughness={fabric==='velvet'?.98:.78} sheen={.5} sheenRoughness={.8} transparent={fabric==='sheer'} opacity={fabric==='sheer'?.78:1}/></mesh><Box p={[side*(2.42+opening*1.05),5.08,-5.03]} s={[.11,.12,.16]} c="#9a7953"/></group>
+ const texture=useMemo(()=>makeFabricTexture(),[])
+ useFrame(({clock},delta)=>{if(!mesh.current)return;const a=geometry.attributes.position as THREE.BufferAttribute,t=clock.elapsedTime;
+  for(let i=0;i<a.count;i++){const x=a.getX(i),y=a.getY(i),u=(x+1.06)/2.12,v=(y+2.04)/4.08;
+   const gather=Math.pow(1-v,.72),pleat=(Math.cos(u*Math.PI*18)+.24*Math.cos(u*Math.PI*36))* (.068+.045*gather);
+   const broadFold=Math.sin(u*Math.PI*6+v*.7)*.018;
+   const breeze=(Math.sin(t*1.35+u*5.8+v*2.2)*.035+Math.sin(t*.82-u*8+v*3)*.018)*(wind/3)*(.2+v);
+   const hemWave=Math.sin(u*Math.PI*5+t*.75)*.035*v*v*(wind/3);
+   a.setZ(i,pleat+broadFold+breeze+hemWave);
+   a.setX(i,x+Math.sin(u*Math.PI*2+t*.7)*.018*v*(wind/3));
+  }
+  a.needsUpdate=true;geometry.computeVertexNormals();
+  const targetX=side*(2.42+opening*1.05);mesh.current.position.x=THREE.MathUtils.damp(mesh.current.position.x,targetX,5,delta);
+  mesh.current.scale.x=THREE.MathUtils.damp(mesh.current.scale.x,1-opening*.25,5,delta);
+  mesh.current.rotation.y=side*(-.045-opening*.07);
+ })
+ const isSheer=fabric==='sheer',isVelvet=fabric==='velvet';
+ const panelX=side*(2.42+opening*1.05);
+ return <group>
+  <mesh ref={mesh} geometry={geometry} position={[side*2.42,2.95,-5.03]} castShadow receiveShadow>
+   <meshPhysicalMaterial color={cloth[fabric]} map={texture??undefined} bumpMap={texture??undefined} bumpScale={isSheer?.012:.035} side={THREE.DoubleSide} roughness={isVelvet?.96:.9} metalness={0} sheen={isVelvet?1:.72} sheenRoughness={.92} sheenColor={isVelvet?'#b6a58a':'#ffffff'} transparent={isSheer} opacity={isSheer?.52:1} depthWrite={!isSheer}/>
+  </mesh>
+  {Array.from({length:11},(_,i)=><group key={i} position={[panelX+(i/10-.5)*1.88,5.12,-5.03]}>
+   <mesh rotation={[0,0,Math.PI/2]}><torusGeometry args={[.055,.012,8,16]}/><meshStandardMaterial color="#9c805d" metalness={.55} roughness={.38}/></mesh>
+   <mesh position={[0,-.12,0]}><sphereGeometry args={[.025,8,8]}/><meshStandardMaterial color="#9c805d" metalness={.45}/></mesh>
+  </group>)}
+  <mesh position={[0,5.2,-5.03]} rotation={[0,0,Math.PI/2]}><cylinderGeometry args={[.035,.035,6.25,12]}/><meshStandardMaterial color="#8b704f" metalness={.62} roughness={.34}/></mesh>
+  <mesh position={[panelX,5.01,-5.03]}><boxGeometry args={[.12,.16,.18]}/><meshStandardMaterial color="#b08b61" roughness={.62}/></mesh>
+ </group>
 }
 function Sofa(){
  return <group position={[-2.45,.08,.05]} rotation={[0,.2,0]}>
