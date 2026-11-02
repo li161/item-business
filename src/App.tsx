@@ -19,7 +19,7 @@ export default function App(){
  const area=Math.max(0,Number(width)||0)*Math.max(0,Number(height)||0)/10000,layerFactor=layer==='double'?1.7:1
  const estimate=Math.round(area*selected.price*layerFactor*2.1/10)*10
  const layerName=layer==='double'?'纱帘 + 布帘':layer==='sheer'?'单层纱帘':'单层遮光布帘'
- const requestText=`CURTAIN LAB 定制意向\n空间参考：${scene.title}\n面料：${selected.name}\n搭配：${layerName}\n窗宽：${width||'待测量'} cm\n窗高：${height||'待测量'} cm\n预估参考：¥${estimate.toLocaleString('zh-CN')}（以实际测量和选样报价为准）`
+ const requestText=`CURTAIN LAB 定制意向\n空间参考：${scene.title}\n面料：${selected.name}\n搭配：${layerName}\n窗宽：${width||'待测量'} cm\n窗高：${height||'待测量'} cm\n演示估算：¥${estimate.toLocaleString('zh-CN')}（非真实报价，需按实际面料与工艺重新核价）`
  const priceLabel=useMemo(()=>estimate>0?`¥${estimate.toLocaleString('zh-CN')}`:'待测量',[estimate])
  const copyRequest=async()=>{try{await navigator.clipboard.writeText(requestText);setCopied(true);window.setTimeout(()=>setCopied(false),1800)}catch{setShowQuote(true)}}
  const prev=()=>setActiveScene(v=>(v+scenes.length-1)%scenes.length),next=()=>setActiveScene(v=>(v+1)%scenes.length)
@@ -58,7 +58,7 @@ export default function App(){
     <label className="measure-field"><span>窗帘高度 <small>HEIGHT</small></span><div><input inputMode="decimal" type="number" min="0" max="1000" value={height} onChange={e=>setHeight(e.target.value)}/><b>cm</b></div></label>
     <div className="measure-tip">尺寸仅用于生成初步预算参考，最终以现场复尺为准。</div>
    </div>}
-   <div className="estimate-card"><div><span>ESTIMATED PROJECT PRICE</span><small>初步预算参考 · 非最终报价</small></div><strong>{priceLabel}</strong></div>
+   <div className="estimate-card"><div><span>ESTIMATED PROJECT PRICE</span><small>交互演示估算 · 非实际报价</small></div><strong>{priceLabel}</strong></div>
    <button className="submit-design" onClick={()=>setShowQuote(true)}>生成我的定制方案 <ArrowRight size={16}/></button>
    <button className="copy-design" onClick={copyRequest}><Copy size={13}/>{copied?'已复制定制清单':'复制当前配置'}</button>
    <div className="panel-foot"><span>MADE FOR YOUR HOME</span><span>01 — 03</span></div>
