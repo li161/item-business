@@ -74,7 +74,6 @@ function Curtain({side}:{side:-1|1}){
    const breeze=(Math.sin(t*1.35+u*5.8+v*2.2)*.035+Math.sin(t*.82-u*8+v*3)*.018)*(wind/3)*(.2+v);
    const hemWave=Math.sin(u*Math.PI*5+t*.75)*.035*v*v*(wind/3);
    a.setZ(i,pleat+broadFold+breeze+hemWave);
-   a.setX(i,x+Math.sin(u*Math.PI*2+t*.7)*.018*v*(wind/3));
   }
   a.needsUpdate=true;geometry.computeVertexNormals();
   const targetX=side*(2.42+opening*1.05);mesh.current.position.x=THREE.MathUtils.damp(mesh.current.position.x,targetX,5,delta);
