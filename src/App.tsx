@@ -1,32 +1,115 @@
-import { Suspense, useState } from 'react'
-import { CloudRain, CloudSun, Moon, Sun, Wind, X, SlidersHorizontal, Sofa, ChevronUp, ChevronDown } from 'lucide-react'
-import CurtainScene from './scene/CurtainScene'
-import { useStudio, type FabricId } from './store'
-const fabrics:Array<{id:FabricId;name:string;zh:string;color:string;note:string}>=[
-{id:'sheer',name:'MORNING MIST',zh:'晨雾薄纱',color:'#eee5d1',note:'柔光透入，轻盈朦胧'},
-{id:'linen',name:'FOREST LINEN',zh:'森林亚麻',color:'#b9a98c',note:'自然肌理，温暖松弛'},
-{id:'velvet',name:'MOSS VELVET',zh:'苔色绒布',color:'#626c59',note:'厚实柔软，沉静有质感'},
-{id:'blackout',name:'NIGHT SHADE',zh:'夜幕遮光',color:'#3d5149',note:'收住光线，留一室安宁'}]
-export default function App(){
- const [panel,setPanel]=useState(false),[fabricOpen,setFabricOpen]=useState(false)
- const fabric=useStudio(s=>s.fabric),wind=useStudio(s=>s.wind),weather=useStudio(s=>s.weather),hour=useStudio(s=>s.hour),opening=useStudio(s=>s.opening)
- const setFabric=useStudio(s=>s.setFabric),setWind=useStudio(s=>s.setWind),setWeather=useStudio(s=>s.setWeather),setHour=useStudio(s=>s.setHour),setOpening=useStudio(s=>s.setOpening)
- const active=fabrics.find(f=>f.id===fabric)!
- return <main className="room-app">
-  <div className="room-canvas"><Suspense fallback={<div className="loading">正在推开木屋的门…</div>}><CurtainScene/></Suspense></div>
-  <header className="room-top"><a className="room-logo" href="#"><span>⌂</span><div><b>FOREST WINDOW</b><small>THE LITTLE HOUSE IN THE WOODS</small></div></a><div className="room-top-actions"><span className="room-live"><i/> ROOM 01 · YOUR SPACE</span><button onClick={()=>setWeather(weather==='sunny'?'rainy':'sunny')}>{weather==='sunny'?<CloudRain/>:<CloudSun/>}{weather==='sunny'?'窗外下雨':'雨停了'}</button></div></header>
-  <div className="room-instruction"><span>拖动视角，看看房间的每个角落</span><span>DRAG TO EXPLORE</span></div>
-  <button className="room-panel-toggle" onClick={()=>setPanel(v=>!v)}><SlidersHorizontal size={15}/><span>房间设置</span>{panel?<ChevronDown size={15}/>:<ChevronUp size={15}/>}</button>
-  <section className={panel?'room-panel expanded':'room-panel'}>
-   <div className="panel-heading"><div><small>MAKE YOURSELF AT HOME</small><b>调整房间的光与风</b></div><button onClick={()=>setPanel(false)}><X size={17}/></button></div>
-   <div className="room-controls">
-    <div className="room-control fabric-control"><label>窗帘织物 <small>FABRIC</small></label><button className="fabric-current" onClick={()=>setFabricOpen(v=>!v)}><i style={{background:active.color}}/><span><b>{active.zh}</b><small>{active.name}</small></span><span>⌄</span></button></div>
-    <div className="room-control"><label><Wind/> 风的力度</label><div className="wind-choices">{['静止','微风','林风','强风'].map((v,i)=><button key={v} className={wind===i?'active':''} onClick={()=>setWind(i as 0|1|2|3)}>{v}</button>)}</div></div>
-    <div className="room-control"><label>{hour>=19?<Moon/>:<Sun/>} 时间与光线</label><div className="range-wrap"><input aria-label="时间与光线" type="range" min="8" max="22" step=".5" value={hour} onChange={e=>setHour(Number(e.target.value))}/><b>{String(Math.floor(hour)).padStart(2,'0')}:{hour%1?'30':'00'}</b></div></div>
-    <div className="room-control"><label><Sofa/> 窗帘开合</label><div className="range-wrap"><input aria-label="窗帘开合" type="range" min="0" max="1" step=".01" value={opening} onChange={e=>setOpening(Number(e.target.value))}/><b>{Math.round(opening*100)}%</b></div></div>
-   </div>
-   {fabricOpen&&<div className="fabric-popover">{fabrics.map(f=><button key={f.id} className={fabric===f.id?'active':''} onClick={()=>{setFabric(f.id);setFabricOpen(false)}}><i style={{background:f.color}}/><span><b>{f.zh}</b><small>{f.note}</small></span>{fabric===f.id?'✓':'+'}</button>)}</div>}
-  </section>
-  <footer className="room-footer"><span>TAKE YOUR TIME</span><span>木屋里的每一束光，都可以由你决定。</span></footer>
- </main>
+import { useState } from 'react'
+import { ArrowUpRight, ChevronLeft, ChevronRight, Expand, Sun, X } from 'lucide-react'
+
+const scenes = [
+  {
+    id: 'warm',
+    title: '午后柔光',
+    subtitle: 'AFTERNOON LIGHT',
+    detail: '阳光穿过轻薄纱帘，在木地板上留下温柔的光影。',
+    photographer: 'Kevin Lieder',
+    photo: 'https://images.unsplash.com/photo-1783110688413-77aadea9e511?auto=format&fit=crop&w=2400&q=88',
+    position: 'center 52%',
+  },
+  {
+    id: 'green',
+    title: '窗边晨雾',
+    subtitle: 'MORNING VEIL',
+    detail: '让自然光经过织物过滤，保留空间的明亮与私密。',
+    photographer: '王大洪',
+    photo: 'https://images.unsplash.com/photo-1768577908037-bbc3da95c1cf?auto=format&fit=crop&w=2400&q=88',
+    position: 'center 50%',
+  },
+  {
+    id: 'quiet',
+    title: '安静的午后',
+    subtitle: 'A QUIET MOMENT',
+    detail: '细腻的窗边光线与真实织物纹理，构成房间的情绪。',
+    photographer: 'Gunther Samson',
+    photo: 'https://images.unsplash.com/photo-1768815151819-14de3e105b66?auto=format&fit=crop&w=2400&q=88',
+    position: 'center 50%',
+  },
+]
+
+export default function App() {
+  const [active, setActive] = useState(0)
+  const [brightness, setBrightness] = useState(100)
+  const [zoom, setZoom] = useState(100)
+  const [showInfo, setShowInfo] = useState(false)
+  const scene = scenes[active]
+
+  const previous = () => setActive((v) => (v + scenes.length - 1) % scenes.length)
+  const next = () => setActive((v) => (v + 1) % scenes.length)
+
+  return (
+    <main className="photo-studio">
+      <div className="photo-stage">
+        {scenes.map((item, index) => (
+          <img
+            key={item.id}
+            className={index === active ? 'room-photo active' : 'room-photo'}
+            src={item.photo}
+            alt={item.title + '，真实室内窗帘摄影'}
+            style={{ objectPosition: item.position, filter: `brightness(${brightness}%)`, transform: `scale(${zoom / 100})` }}
+            loading={index === 0 ? 'eager' : 'lazy'}
+          />
+        ))}
+        <div className="photo-vignette" />
+      </div>
+
+      <header className="photo-header">
+        <a className="photo-brand" href="#" aria-label="CURTAIN LAB 首页">
+          <span className="brand-mark">C.</span>
+          <span><b>CURTAIN LAB</b><small>WINDOW DESIGN STUDIO</small></span>
+        </a>
+        <div className="header-center">REAL ROOMS · REAL LIGHT · REAL TEXTURE</div>
+        <button className="header-cta" onClick={() => setShowInfo(true)}>预约窗帘设计 <ArrowUpRight size={15} /></button>
+      </header>
+
+      <section className="photo-copy" key={scene.id}>
+        <div className="eyebrow"><i /> {scene.subtitle}</div>
+        <h1>{scene.title}</h1>
+        <p>{scene.detail}</p>
+        <div className="photo-count"><b>0{active + 1}</b><span />0{scenes.length}</div>
+      </section>
+
+      <div className="scene-switcher">
+        <button className="switch-arrow" onClick={previous} aria-label="上一张实景"><ChevronLeft /></button>
+        <div className="scene-thumbs">
+          {scenes.map((item, index) => (
+            <button key={item.id} className={index === active ? 'scene-thumb selected' : 'scene-thumb'} onClick={() => setActive(index)} aria-label={item.title}>
+              <img src={item.photo} alt="" />
+              <span>{item.title}</span>
+            </button>
+          ))}
+        </div>
+        <button className="switch-arrow" onClick={next} aria-label="下一张实景"><ChevronRight /></button>
+      </div>
+
+      <aside className="photo-tools">
+        <div className="tools-head"><span>SCENE ADJUSTMENT</span><button onClick={() => { setBrightness(100); setZoom(100) }} aria-label="重置画面"><X size={14}/></button></div>
+        <label><span><Sun size={14}/> 自然光强度</span><b>{brightness}%</b></label>
+        <input aria-label="自然光强度" type="range" min="70" max="125" value={brightness} onChange={e => setBrightness(Number(e.target.value))}/>
+        <label><span><Expand size={14}/> 画面视角</span><b>{zoom}%</b></label>
+        <input aria-label="画面视角" type="range" min="100" max="118" value={zoom} onChange={e => setZoom(Number(e.target.value))}/>
+        <small>仅调整照片观感，不改变原始窗帘材质。</small>
+      </aside>
+
+      <footer className="photo-footer">
+        <span>CURTAIN LAB / PHOTO STUDY 0{active + 1}</span>
+        <button onClick={() => setShowInfo(true)}>从真实空间开始定制 <ArrowUpRight size={14}/></button>
+        <span>摄影：{scene.photographer} · Unsplash</span>
+      </footer>
+
+      {showInfo && <div className="info-backdrop" onClick={() => setShowInfo(false)}>
+        <section className="info-dialog" onClick={e => e.stopPropagation()}>
+          <button className="dialog-close" onClick={() => setShowInfo(false)} aria-label="关闭"><X/></button>
+          <span className="eyebrow">PERSONAL WINDOW DESIGN</span>
+          <h2>让窗帘回到真实的生活里。</h2>
+          <p>告诉我们你的窗户尺寸、空间风格与采光需求，我们将从真实面料与实际空间出发，为你搭配窗帘方案。</p>
+          <a href="mailto:hello@curtainlab.studio?subject=CURTAIN%20LAB%20窗帘定制咨询">发送定制咨询 <ArrowUpRight size={15}/></a>
+        </section>
+      </div>}
+    </main>
+  )
 }
