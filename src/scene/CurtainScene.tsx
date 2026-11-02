@@ -1,5 +1,5 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { ContactShadows, Environment, Float, OrbitControls } from '@react-three/drei'
+import { ContactShadows, Environment, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import { useMemo, useRef } from 'react'
 import { useStudio, type FabricId } from '../store'
@@ -95,13 +95,6 @@ function CurtainPanel({ side }: { side: 'left' | 'right' }) {
   const look = fabricLooks[fabric]
   const direction = side === 'left' ? -1 : 1
   const rootX = direction * (0.05 + open * 1.15)
-  const material = useMemo(() => new THREE.MeshPhysicalMaterial({ color: '#b9ad98', roughness: 0.94, side: THREE.DoubleSide, transparent: true, depthWrite: true, sheen: 0.35, sheenRoughness: 0.9 }), [])
-  material.color.set(look.color)
-  material.roughness = look.roughness
-  material.opacity = look.opacity
-  material.transparent = look.opacity < 1
-  material.depthWrite = look.opacity > 0.8
-  material.sheen = fabric === 'velvet' ? 0.9 : 0.25
   useFrame(({ clock }, delta) => {
     if (!mesh.current) return
     const t = clock.elapsedTime
@@ -153,9 +146,9 @@ function CurtainPanel({ side }: { side: 'left' | 'right' }) {
     drag.current.targetY *= 0.12
   }
   return (
-    <mesh ref={mesh} geometry={geometry} material={material} castShadow receiveShadow
+    <mesh ref={mesh} geometry={geometry} castShadow receiveShadow
       onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerLeave={pointerUp}>
-      <meshStandardMaterial attach="material" color={look.color} roughness={look.roughness} side={THREE.DoubleSide} transparent={look.opacity < 1} opacity={look.opacity} depthWrite={look.opacity > 0.8} />
+      <meshPhysicalMaterial color={look.color} roughness={look.roughness} side={THREE.DoubleSide} transparent={look.opacity < 1} opacity={look.opacity} depthWrite={look.opacity > 0.8} sheen={fabric === 'velvet' ? 0.9 : 0.22} sheenRoughness={0.9} />
     </mesh>
   )
 }
